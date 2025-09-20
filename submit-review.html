@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Submit Review - HawkerHunt SG</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+    }
+    h1 {
+      color: #F6AD55;
+      font-size: 1.8rem;
+      margin-top: 0;
+    }
+    label {
+      display: block;
+      margin: 1rem 0 0.5rem 0;
+      font-weight: 600;
+    }
+    select, textarea, input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    .rating {
+      display: flex;
+      gap: 4px;
+    }
+    .rating input {
+      display: none;
+    }
+    .rating label {
+      font-size: 2rem;
+      cursor: pointer;
+      color: #ddd;
+    }
+    .rating input:checked ~ label,
+    .rating label:hover,
+    .rating label:hover ~ label {
+      color: #F6AD55;
+    }
+    button {
+      background: #F6AD55;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: 600;
+    }
+    button:hover {
+      background: #E59A40;
+    }
+    .back-home {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      color: #F6AD55;
+      text-decoration: none;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>✍️ Submit a Review</h1>
+      <p>Help others find the best hawker stalls in Singapore!</p>
+
+      <form id="reviewForm">
+        <label for="hawkerCentre">Hawker Centre</label>
+        <select id="hawkerCentre" required>
+          <option value="">Select a Hawker Centre</option>
+          <option value="chinatown">Chinatown Complex Food Centre</option>
+          <option value="maxwell">Maxwell Food Centre</option>
+          <option value="old-airport">Old Airport Road Food Centre</option>
+          <option value="tekka">Tekka Centre</option>
+          <option value="lau-pa-sat">Lau Pa Sat</option>
+        </select>
+
+        <label for="stall">Stall Name</label>
+        <select id="stall" required>
+          <option value="">Select a Stall (select Hawker Centre first)</option>
+        </select>
+
+        <label>Rating</label>
+        <div class="rating">
+          <input type="radio" id="star5" name="rating" value="5" required />
+          <label for="star5">★</label>
+          <input type="radio" id="star4" name="rating" value="4" />
+          <label for="star4">★</label>
+          <input type="radio" id="star3" name="rating" value="3" />
+          <label for="star3">★</label>
+          <input type="radio" id="star2" name="rating" value="2" />
+          <label for="star2">★</label>
+          <input type="radio" id="star1" name="rating" value="1" />
+          <label for="star1">★</label>
+        </div>
+
+        <label for="comment">Review Comment</label>
+        <textarea id="comment" rows="4" placeholder="What did you order? How was the taste, service, price?" required></textarea>
+
+        <label for="photo">Upload Photo (Optional)</label>
+        <input type="file" id="photo" accept="image/*" />
+
+        <label for="queue">Queue Time When You Visited</label>
+        <select id="queue" required>
+          <option value="">Select Queue Time</option>
+          <option value="empty">Empty (walk right in)</option>
+          <option value="short">Short (under 5 mins)</option>
+          <option value="medium">Medium (5-15 mins)</option>
+          <option value="long">Long (15+ mins)</option>
+        </select>
+
+        <button type="submit">Submit Review</button>
+      </form>
+
+      <a href="index.html" class="back-home">← Back to Home</a>
+    </div>
+  </div>
+
+  <script>
+    // Simple stall population based on hawker centre (mock data)
+    const stallMap = {
+      chinatown: [
+        "Lian He Fishball Noodles",
+        "Xin Mei Xiang BBQ Chicken Rice",
+        "Zhong Guo La Mian Xiao Long Bao"
+      ],
+      maxwell: [
+        "Tian Tian Hainanese Chicken Rice",
+        "Zhen Zhen Sesame Noodles",
+        "Popiah Original"
+      ],
+      "old-airport": [
+        "Nam Sing Hokkien Fried Mee",
+        "Xin Mei Xiang Roast Meat",
+        "Chuan Kee Boneless Duck"
+      ],
+      tekka: [
+        "Tekka Centre Mutton Soup",
+        "Annalakshmi Vegetarian",
+        "Jalan Kayu Roti Prata"
+      ],
+      "lau-pa-sat": [
+        "Lau Pa Sat Satay Street",
+        "Jumbo Seafood (Satay by the Bay)",
+        "Wok Hey Hokkien Mee"
+      ]
+    };
+
+    const hawkerSelect = document.getElementById('hawkerCentre');
+    const stallSelect = document.getElementById('stall');
+
+    hawkerSelect.addEventListener('change', function() {
+      stallSelect.innerHTML = '<option value="">Select a Stall</option>';
+      const selectedCentre = this.value;
+      if (selectedCentre && stallMap[selectedCentre]) {
+        stallMap[selectedCentre].forEach(stallName => {
+          const option = document.createElement('option');
+          option.value = stallName.toLowerCase().replace(/\s+/g, '-');
+          option.textContent = stallName;
+          stallSelect.appendChild(option);
+        });
+      }
+    });
+
+    document.getElementById('reviewForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const rating = document.querySelector('input[name="rating"]:checked')?.value;
+      const comment = document.getElementById('comment').value.trim();
+      const queue = document.getElementById('queue').value;
+
+      if (!rating || !comment || !queue) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      alert('✅ Thank you! Your review was submitted. (In the real version, this will be saved to our database.)');
+
+      // Later: send to Google Form, Airtable, or Firebase
+      // For now: reset form
+      this.reset();
+      stallSelect.innerHTML = '<option value="">Select a Stall (select Hawker Centre first)</option>';
+    });
+  </script>
+</body>
+</html>

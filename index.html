@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HawkerHunt SG</title>
+  <link href="https://cdn.jsdelivr.net/npm/@chakra-ui/core@1.0.0-rc.8/dist/chakra-ui-core.min.css" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+    .hero { background: #F6AD55; color: white; padding: 2rem; text-align: center; }
+    .container { max-width: 720px; margin: 0 auto; padding: 1.5rem; }
+    .search-box { display: flex; gap: 8px; margin: 1rem 0; }
+    .search-box input { flex: 1; padding: 12px 16px; border-radius: 9999px; border: 1px solid #ddd; }
+    .search-box button { padding: 12px 24px; border-radius: 9999px; cursor: pointer; }
+    .orange-btn { background: #F6AD55; color: white; border: none; }
+    .outline-btn { background: white; color: #F6AD55; border: 2px solid #F6AD55; }
+    .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+    .card img { width: 100%; height: 160px; object-fit: cover; }
+    .card-body { padding: 1rem; }
+    .footer { text-align: center; padding: 2rem; color: #aaa; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1 style="font-size: 2rem; margin: 0 0 0.5rem 0;">HawkerHunt SG</h1>
+    <p>Discover the best hawker stalls. Skip the guesswork.</p>
+  </div>
+  
+    <div style="text-align: center; margin: 1rem 0">
+      <a
+        href="submit-review.html"
+        style="
+          background: #f6ad55;
+          color: white;
+          padding: 12px 24px;
+          border-radius: 9999px;
+          text-decoration: none;
+          font-weight: 600;
+          display: inline-block;
+        "
+      >
+        ➕ Submit a Review
+      </a>
+    </div>
+
+  <div class="container">
+    <form id="searchForm">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search hawker centre or MRT (e.g. 'Maxwell', 'Bugis')" />
+        <button type="submit" class="orange-btn">Search</button>
+      </div>
+      <div style="text-align: center; margin: 1rem 0;">
+        <button type="button" id="nearMeBtn" class="outline-btn" style="display: inline-flex; align-items: center; gap: 6px;">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C4.6 0 2 2.6 2 6c0 1.5.6 3 1.7 4.1L8 16l4.3-5.9C13.4 9 14 7.5 14 6c0-3.4-2.6-6-6-6zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
+          Near Me
+        </button>
+      </div>
+    </form>
+
+    <h2 style="font-size: 1.2rem; margin: 1.5rem 0 1rem 0;">🏆 Featured Hawker Centres</h2>
+
+    <div class="card" onclick="alert('Chinatown Complex')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Chinatown_Complex_Food_Centre.jpg" alt="Chinatown Complex">
+      <div class="card-body">
+        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">Chinatown Complex</h3>
+        <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 Chinatown MRT</p>
+        <p style="color: #999; font-size: 0.9rem; margin: 0;">🍜 260+ stalls</p>
+      </div>
+    </div>
+
+    <div class="card" onclick="alert('Maxwell Food Centre')">
+      <img src="https://www.visitsingapore.com/content/dam/vs-cms-assets/attractions/maxwell-food-centre/maxwell-food-centre-16-9.jpg" alt="Maxwell Food Centre">
+      <div class="card-body">
+        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">Maxwell Food Centre</h3>
+        <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 Tanjong Pagar MRT</p>
+        <p style="color: #999; font-size: 0.9rem; margin: 0;">🍜 120+ stalls</p>
+      </div>
+    </div>
+
+    <div class="card" onclick="alert('Old Airport Road')">
+      <img src="https://timeoutsingapore.files.wordpress.com/2020/07/old-airport-road-food-centre.jpg" alt="Old Airport Road">
+      <div class="card-body">
+        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">Old Airport Road</h3>
+        <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 Dakota MRT</p>
+        <p style="color: #999; font-size: 0.9rem; margin: 0;">🍜 180+ stalls</p>
+      </div>
+    </div>
+
+    <div class="card" onclick="alert('Tekka Centre')">
+      <img src="https://www.visitsingapore.com/content/dam/vs-cms-assets/attractions/tekka-centre/tekka-centre-little-india-16-9.jpg" alt="Tekka Centre">
+      <div class="card-body">
+        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">Tekka Centre</h3>
+        <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 Little India MRT</p>
+        <p style="color: #999; font-size: 0.9rem; margin: 0;">🍜 90+ stalls</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Built with ❤️ for Singapore’s Hawker Culture
+  </div>
+
+  <script>
+    document.getElementById('searchForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) {
+        alert('Please enter a hawker centre or MRT name');
+        return;
+      }
+      alert('Searching for: ' + query);
+    });
+
+    document.getElementById('nearMeBtn').addEventListener('click', function() {
+      if (navigator.geolocation) {
+        alert('📍 Finding hawker centres near you...');
+        // Later: connect to real location
+        setTimeout(() => alert('Found 3 centres near you!'), 1500);
+      } else {
+        alert('Geolocation not supported. Try searching by name.');
+      }
+    });
+  </script>
+</body>
+</html>
