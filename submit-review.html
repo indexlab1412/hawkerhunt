@@ -142,70 +142,71 @@
   </div>
 
   <script>
-    // Simple stall population based on hawker centre (mock data)
-    const stallMap = {
-      chinatown: [
-        "Lian He Fishball Noodles",
-        "Xin Mei Xiang BBQ Chicken Rice",
-        "Zhong Guo La Mian Xiao Long Bao"
-      ],
-      maxwell: [
-        "Tian Tian Hainanese Chicken Rice",
-        "Zhen Zhen Sesame Noodles",
-        "Popiah Original"
-      ],
-      "old-airport": [
-        "Nam Sing Hokkien Fried Mee",
-        "Xin Mei Xiang Roast Meat",
-        "Chuan Kee Boneless Duck"
-      ],
-      tekka: [
-        "Tekka Centre Mutton Soup",
-        "Annalakshmi Vegetarian",
-        "Jalan Kayu Roti Prata"
-      ],
-      "lau-pa-sat": [
-        "Lau Pa Sat Satay Street",
-        "Jumbo Seafood (Satay by the Bay)",
-        "Wok Hey Hokkien Mee"
-      ]
+  // Stall options (same as before)
+  const stallMap = {
+    "Chinatown Complex": ["Lian He Fishball Noodles", "Xin Mei Xiang BBQ Chicken Rice", "Zhong Guo La Mian Xiao Long Bao"],
+    "Maxwell Food Centre": ["Tian Tian Hainanese Chicken Rice", "Zhen Zhen Sesame Noodles", "Popiah Original"],
+    "Old Airport Road": ["Nam Sing Hokkien Fried Mee", "Xin Mei Xiang Roast Meat", "Chuan Kee Boneless Duck"],
+    "Tekka Centre": ["Tekka Centre Mutton Soup", "Annalakshmi Vegetarian", "Jalan Kayu Roti Prata"],
+    "Lau Pa Sat": ["Lau Pa Sat Satay Street", "Jumbo Seafood (Satay by the Bay)", "Wok Hey Hokkien Mee"]
+  };
+
+  const hawkerSelect = document.getElementById('hawkerCentre');
+  const stallSelect = document.getElementById('stall');
+
+  hawkerSelect.addEventListener('change', function() {
+    stallSelect.innerHTML = '<option value="">Select a Stall</option>';
+    const selectedCentre = this.value;
+    if (selectedCentre && stallMap[selectedCentre]) {
+      stallMap[selectedCentre].forEach(stallName => {
+        const option = document.createElement('option');
+        option.value = stallName;
+        option.textContent = stallName;
+        stallSelect.appendChild(option);
+      });
+    }
+  });
+
+  // NEW: Submit via Google Apps Script
+  document.getElementById('reviewForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const rating = document.querySelector('input[name="Rating"]:checked')?.value;
+    const comment = document.getElementById('comment').value.trim();
+    const queue = document.getElementById('queue').value;
+
+    if (!rating || !comment || !queue) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    // Collect form data
+    const formData = {
+      "Hawker Centre": hawkerSelect.value,
+      "Stall Name": stallSelect.value,
+      "Rating": rating,
+      "Review Comment": comment,
+      "Queue Time": queue
     };
 
-    const hawkerSelect = document.getElementById('hawkerCentre');
-    const stallSelect = document.getElementById('stall');
+    try {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbxsEtmyLbP2Ilbm4JtHJFeTBkbsRo9zJ0G_EWkwOsqv8YL_3-vS66cy472pUhbqkh_79Q/exec', {
+        method: 'POST',
+        mode: 'no-cors', // Important for Google Scripts
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
 
-    hawkerSelect.addEventListener('change', function() {
-      stallSelect.innerHTML = '<option value="">Select a Stall</option>';
-      const selectedCentre = this.value;
-      if (selectedCentre && stallMap[selectedCentre]) {
-        stallMap[selectedCentre].forEach(stallName => {
-          const option = document.createElement('option');
-          option.value = stallName.toLowerCase().replace(/\s+/g, '-');
-          option.textContent = stallName;
-          stallSelect.appendChild(option);
-        });
-      }
-    });
-
-    document.getElementById('reviewForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const rating = document.querySelector('input[name="rating"]:checked')?.value;
-      const comment = document.getElementById('comment').value.trim();
-      const queue = document.getElementById('queue').value;
-
-      if (!rating || !comment || !queue) {
-        alert('Please fill in all required fields.');
-        return;
-      }
-
-      alert('✅ Thank you! Your review was submitted. (In the real version, this will be saved to our database.)');
-
-      // Later: send to Google Form, Airtable, or Firebase
-      // For now: reset form
+      alert('✅ Thank you! Your review has been saved to our database.');
       this.reset();
       stallSelect.innerHTML = '<option value="">Select a Stall (select Hawker Centre first)</option>';
-    });
-  </script>
+    } catch (error) {
+      alert('❌ Failed to submit. Please try again later.');
+      console.error(error);
+    }
+  });
+</script>
 </body>
 </html>
