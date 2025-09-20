@@ -91,47 +91,44 @@
 
       <form id="reviewForm">
         <label for="hawkerCentre">Hawker Centre</label>
-        <select id="hawkerCentre" required>
+        <select id="hawkerCentre" name="Hawker Centre" required>
           <option value="">Select a Hawker Centre</option>
-          <option value="chinatown">Chinatown Complex Food Centre</option>
-          <option value="maxwell">Maxwell Food Centre</option>
-          <option value="old-airport">Old Airport Road Food Centre</option>
-          <option value="tekka">Tekka Centre</option>
-          <option value="lau-pa-sat">Lau Pa Sat</option>
+          <option value="Chinatown Complex">Chinatown Complex Food Centre</option>
+          <option value="Maxwell Food Centre">Maxwell Food Centre</option>
+          <option value="Old Airport Road">Old Airport Road Food Centre</option>
+          <option value="Tekka Centre">Tekka Centre</option>
+          <option value="Lau Pa Sat">Lau Pa Sat</option>
         </select>
 
         <label for="stall">Stall Name</label>
-        <select id="stall" required>
+        <select id="stall" name="Stall Name" required>
           <option value="">Select a Stall (select Hawker Centre first)</option>
         </select>
 
         <label>Rating</label>
         <div class="rating">
-          <input type="radio" id="star5" name="rating" value="5" required />
+          <input type="radio" id="star5" name="Rating" value="5" required />
           <label for="star5">★</label>
-          <input type="radio" id="star4" name="rating" value="4" />
+          <input type="radio" id="star4" name="Rating" value="4" />
           <label for="star4">★</label>
-          <input type="radio" id="star3" name="rating" value="3" />
+          <input type="radio" id="star3" name="Rating" value="3" />
           <label for="star3">★</label>
-          <input type="radio" id="star2" name="rating" value="2" />
+          <input type="radio" id="star2" name="Rating" value="2" />
           <label for="star2">★</label>
-          <input type="radio" id="star1" name="rating" value="1" />
+          <input type="radio" id="star1" name="Rating" value="1" />
           <label for="star1">★</label>
         </div>
 
         <label for="comment">Review Comment</label>
-        <textarea id="comment" rows="4" placeholder="What did you order? How was the taste, service, price?" required></textarea>
-
-        <label for="photo">Upload Photo (Optional)</label>
-        <input type="file" id="photo" accept="image/*" />
+        <textarea id="comment" name="Review Comment" rows="4" placeholder="What did you order? How was the taste, service, price?" required></textarea>
 
         <label for="queue">Queue Time When You Visited</label>
-        <select id="queue" required>
+        <select id="queue" name="Queue Time" required>
           <option value="">Select Queue Time</option>
-          <option value="empty">Empty (walk right in)</option>
-          <option value="short">Short (under 5 mins)</option>
-          <option value="medium">Medium (5-15 mins)</option>
-          <option value="long">Long (15+ mins)</option>
+          <option value="Empty">Empty (walk right in)</option>
+          <option value="Short">Short (under 5 mins)</option>
+          <option value="Medium">Medium (5-15 mins)</option>
+          <option value="Long">Long (15+ mins)</option>
         </select>
 
         <button type="submit">Submit Review</button>
@@ -142,71 +139,95 @@
   </div>
 
   <script>
-  // Stall options (same as before)
-  const stallMap = {
-    "Chinatown Complex": ["Lian He Fishball Noodles", "Xin Mei Xiang BBQ Chicken Rice", "Zhong Guo La Mian Xiao Long Bao"],
-    "Maxwell Food Centre": ["Tian Tian Hainanese Chicken Rice", "Zhen Zhen Sesame Noodles", "Popiah Original"],
-    "Old Airport Road": ["Nam Sing Hokkien Fried Mee", "Xin Mei Xiang Roast Meat", "Chuan Kee Boneless Duck"],
-    "Tekka Centre": ["Tekka Centre Mutton Soup", "Annalakshmi Vegetarian", "Jalan Kayu Roti Prata"],
-    "Lau Pa Sat": ["Lau Pa Sat Satay Street", "Jumbo Seafood (Satay by the Bay)", "Wok Hey Hokkien Mee"]
-  };
-
-  const hawkerSelect = document.getElementById('hawkerCentre');
-  const stallSelect = document.getElementById('stall');
-
-  hawkerSelect.addEventListener('change', function() {
-    stallSelect.innerHTML = '<option value="">Select a Stall</option>';
-    const selectedCentre = this.value;
-    if (selectedCentre && stallMap[selectedCentre]) {
-      stallMap[selectedCentre].forEach(stallName => {
-        const option = document.createElement('option');
-        option.value = stallName;
-        option.textContent = stallName;
-        stallSelect.appendChild(option);
-      });
-    }
-  });
-
-  // NEW: Submit via Google Apps Script
-  document.getElementById('reviewForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const rating = document.querySelector('input[name="Rating"]:checked')?.value;
-    const comment = document.getElementById('comment').value.trim();
-    const queue = document.getElementById('queue').value;
-
-    if (!rating || !comment || !queue) {
-      alert('Please fill in all required fields.');
-      return;
-    }
-
-    // Collect form data
-    const formData = {
-      "Hawker Centre": hawkerSelect.value,
-      "Stall Name": stallSelect.value,
-      "Rating": rating,
-      "Review Comment": comment,
-      "Queue Time": queue
+    // Stall data — keys MUST match "value" in Hawker Centre dropdown
+    const stallMap = {
+      "Chinatown Complex": [
+        "Lian He Fishball Noodles",
+        "Xin Mei Xiang BBQ Chicken Rice",
+        "Zhong Guo La Mian Xiao Long Bao"
+      ],
+      "Maxwell Food Centre": [
+        "Tian Tian Hainanese Chicken Rice",
+        "Zhen Zhen Sesame Noodles",
+        "Popiah Original"
+      ],
+      "Old Airport Road": [
+        "Nam Sing Hokkien Fried Mee",
+        "Xin Mei Xiang Roast Meat",
+        "Chuan Kee Boneless Duck"
+      ],
+      "Tekka Centre": [
+        "Tekka Centre Mutton Soup",
+        "Annalakshmi Vegetarian",
+        "Jalan Kayu Roti Prata"
+      ],
+      "Lau Pa Sat": [
+        "Lau Pa Sat Satay Street",
+        "Jumbo Seafood (Satay by the Bay)",
+        "Wok Hey Hokkien Mee"
+      ]
     };
 
-    try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbxsEtmyLbP2Ilbm4JtHJFeTBkbsRo9zJ0G_EWkwOsqv8YL_3-vS66cy472pUhbqkh_79Q/exec', {
-        method: 'POST',
-        mode: 'no-cors', // Important for Google Scripts
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
+    const hawkerSelect = document.getElementById('hawkerCentre');
+    const stallSelect = document.getElementById('stall');
 
-      alert('✅ Thank you! Your review has been saved to our database.');
-      this.reset();
-      stallSelect.innerHTML = '<option value="">Select a Stall (select Hawker Centre first)</option>';
-    } catch (error) {
-      alert('❌ Failed to submit. Please try again later.');
-      console.error(error);
-    }
-  });
-</script>
+    // Populate stalls when hawker centre changes
+    hawkerSelect.addEventListener('change', function() {
+      stallSelect.innerHTML = '<option value="">Select a Stall</option>';
+      const selectedCentre = this.value;
+      if (selectedCentre && stallMap[selectedCentre]) {
+        stallMap[selectedCentre].forEach(stallName => {
+          const option = document.createElement('option');
+          option.value = stallName;
+          option.textContent = stallName;
+          stallSelect.appendChild(option);
+        });
+      }
+    });
+
+    // Handle form submission to Google Apps Script
+    document.getElementById('reviewForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const rating = document.querySelector('input[name="Rating"]:checked')?.value;
+      const comment = document.getElementById('comment').value.trim();
+      const queue = document.getElementById('queue').value;
+
+      if (!rating || !comment || !queue) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      // Collect form data
+      const formData = {
+        "Hawker Centre": hawkerSelect.value,
+        "Stall Name": stallSelect.value,
+        "Rating": rating,
+        "Review Comment": comment,
+        "Queue Time": queue
+      };
+
+      try {
+        // 👇 REPLACE THIS URL with your Google Apps Script Web App URL
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxsEtmyLbP2Ilbm4JtHJFeTBkbsRo9zJ0G_EWkwOsqv8YL_3-vS66cy472pUhbqkh_79Q/exec';
+
+        const response = await fetch(scriptURL, {
+          method: 'POST',
+          mode: 'no-cors', // Required for Google Scripts
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+
+        alert('✅ Thank you! Your review has been saved.');
+        this.reset();
+        stallSelect.innerHTML = '<option value="">Select a Stall (select Hawker Centre first)</option>';
+      } catch (error) {
+        alert('❌ Failed to submit. Please try again later.');
+        console.error('Error:', error);
+      }
+    });
+  </script>
 </body>
 </html>
