@@ -138,45 +138,29 @@
     </div>
   </div>
 
-  <script>
-    // Stall data — keys MUST match "value" in Hawker Centre dropdown
-    const stallMap = {
-      "Chinatown Complex": [
-        "Lian He Fishball Noodles",
-        "Xin Mei Xiang BBQ Chicken Rice",
-        "Zhong Guo La Mian Xiao Long Bao"
-      ],
-      "Maxwell Food Centre": [
-        "Tian Tian Hainanese Chicken Rice",
-        "Zhen Zhen Sesame Noodles",
-        "Popiah Original"
-      ],
-      "Old Airport Road": [
-        "Nam Sing Hokkien Fried Mee",
-        "Xin Mei Xiang Roast Meat",
-        "Chuan Kee Boneless Duck"
-      ],
-      "Tekka Centre": [
-        "Tekka Centre Mutton Soup",
-        "Annalakshmi Vegetarian",
-        "Jalan Kayu Roti Prata"
-      ],
-      "Lau Pa Sat": [
-        "Lau Pa Sat Satay Street",
-        "Jumbo Seafood (Satay by the Bay)",
-        "Wok Hey Hokkien Mee"
-      ]
-    };
+<script src="data.js"></script>
+<script>
+  // 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbxwukipkxHRbqy6PvpUL4RcSNAuVJexwC_eFa9IZEfvfr23qh5YNPvqERHWU95O2cZzLA/exec';
 
+  document.addEventListener('DOMContentLoaded', function() {
     const hawkerSelect = document.getElementById('hawkerCentre');
     const stallSelect = document.getElementById('stall');
 
-    // Populate stalls when hawker centre changes
+    // Populate Hawker Centres
+    hawkerData.forEach(centre => {
+      const option = document.createElement('option');
+      option.value = centre.name;
+      option.textContent = centre.name;
+      hawkerSelect.appendChild(option);
+    });
+
+    // Populate Stalls when Hawker Centre changes
     hawkerSelect.addEventListener('change', function() {
       stallSelect.innerHTML = '<option value="">Select a Stall</option>';
-      const selectedCentre = this.value;
-      if (selectedCentre && stallMap[selectedCentre]) {
-        stallMap[selectedCentre].forEach(stallName => {
+      const selectedCentre = hawkerData.find(c => c.name === this.value);
+      if (selectedCentre) {
+        selectedCentre.stalls.forEach(stallName => {
           const option = document.createElement('option');
           option.value = stallName;
           option.textContent = stallName;
@@ -185,7 +169,7 @@
       }
     });
 
-    // Handle form submission to Google Apps Script
+    // Handle form submission
     document.getElementById('reviewForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -198,7 +182,6 @@
         return;
       }
 
-      // Collect form data
       const formData = {
         "Hawker Centre": hawkerSelect.value,
         "Stall Name": stallSelect.value,
@@ -208,12 +191,9 @@
       };
 
       try {
-        // 👇 REPLACE THIS URL with your Google Apps Script Web App URL
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxwukipkxHRbqy6PvpUL4RcSNAuVJexwC_eFa9IZEfvfr23qh5YNPvqERHWU95O2cZzLA/exec';
-
         const response = await fetch(scriptURL, {
           method: 'POST',
-          mode: 'no-cors', // Required for Google Scripts
+          mode: 'no-cors',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -221,29 +201,23 @@
         });
 
         alert('✅ Thank you! Your review has been saved.');
-		const stallName = stallSelect.value.trim();
-		if (!stallName) {
-		alert('❌ Error: Stall name is empty. Redirecting to homepage.');
-		setTimeout(() => {
-		window.location.href = 'index.html';
-		}, 2000);
-		return;
-		}
 
-		// Encode stall name for URL
-		const encodedStallName = encodeURIComponent(stallName);
-
-		// Redirect to stall page
-		setTimeout(() => {
-		window.location.href = `stall.html?name=${encodedStallName}`;
-		}, 2000);
-        this.reset();
-        stallSelect.innerHTML = '<option value="">Select a Stall (select Hawker Centre first)</option>';
+        const stallName = stallSelect.value.trim();
+        if (stallName) {
+          setTimeout(() => {
+            window.location.href = `stall.html?name=${encodeURIComponent(stallName)}`;
+          }, 2000);
+        } else {
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 2000);
+        }
       } catch (error) {
         alert('❌ Failed to submit. Please try again later.');
         console.error('Error:', error);
       }
     });
-  </script>
+  });
+</script>
 </body>
 </html>

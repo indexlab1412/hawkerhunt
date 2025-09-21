@@ -258,5 +258,23 @@ async function loadStallReviews() {
     // Load when page is ready
     document.addEventListener('DOMContentLoaded', loadStallReviews);
   </script>
+  <script src="data.js"></script>
+<script>
+  // Optional: Enhance stall page with hawker centre image or link
+  document.addEventListener('DOMContentLoaded', function() {
+    const hawkerCentreElement = document.getElementById('hawker-centre');
+    const hawkerCentreName = hawkerCentreElement.textContent;
+
+    const centre = hawkerData.find(c => c.name === hawkerCentreName);
+    if (centre) {
+      // You could add an image or link here if you want
+      // Example: add MRT info or image
+      hawkerCentreElement.innerHTML = `
+        ${hawkerCentreName} <br>
+        <small>📍 ${centre.mrt}</small>
+      `;
+    }
+  });
+</script>
 </body>
 </html>

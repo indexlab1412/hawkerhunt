@@ -94,25 +94,50 @@
       </div>
     </form>
 
-    <h2 style="font-size: 1.2rem; margin: 1.5rem 0 1rem 0;">🏆 Featured Hawker Centres</h2>
+<h2 class="section-title">🏆 Featured Hawker Centres</h2>
+<div id="featured-centres">
+  <p>Loading featured centres...</p>
+</div>
 
-    <div class="card" onclick="alert('Chinatown Complex')">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Chinatown_Complex_Food_Centre.jpg" alt="Chinatown Complex">
-      <div class="card-body">
-        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">Chinatown Complex</h3>
-        <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 Chinatown MRT</p>
-        <p style="color: #999; font-size: 0.9rem; margin: 0;">🍜 260+ stalls</p>
-      </div>
-    </div>
+<script src="data.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Shuffle array (Fisher-Yates)
+    function shuffleArray(array) {
+      let currentIndex = array.length, randomIndex;
+      while (currentIndex != 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+      }
+      return array;
+    }
 
-    <div class="card" onclick="alert('Maxwell Food Centre')">
-      <img src="https://www.visitsingapore.com/content/dam/vs-cms-assets/attractions/maxwell-food-centre/maxwell-food-centre-16-9.jpg" alt="Maxwell Food Centre">
-      <div class="card-body">
-        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">Maxwell Food Centre</h3>
-        <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 Tanjong Pagar MRT</p>
-        <p style="color: #999; font-size: 0.9rem; margin: 0;">🍜 120+ stalls</p>
-      </div>
-    </div>
+    // Get 2 random centres
+    const shuffled = shuffleArray([...hawkerData]);
+    const featured = shuffled.slice(0, 2);
+
+    const container = document.getElementById('featured-centres');
+    container.innerHTML = '';
+
+    featured.forEach(centre => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img src="${centre.image}" alt="${centre.name}" style="width:100%; height:160px; object-fit:cover;">
+        <div class="card-body">
+          <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">${centre.name}</h3>
+          <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 ${centre.mrt}</p>
+          <p style="color: #999; font-size: 0.9rem; margin: 0;">🍜 ${centre.stalls.length}+ stalls</p>
+        </div>
+      `;
+      card.addEventListener('click', () => {
+        alert(`Navigate to ${centre.name} (you can link to a centre page later!)`);
+      });
+      container.appendChild(card);
+    });
+  });
+</script>
 
     <!-- Recent Reviews Section -->
     <h2 class="section-title">⭐ Recent Reviews</h2>
