@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stall Detail - HawkerHunt SG</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    .header {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .stall-name {
+      font-size: 1.8rem;
+      color: #333;
+      margin: 0 0 0.5rem 0;
+    }
+    .hawker-centre {
+      color: #777;
+      font-size: 1rem;
+      margin: 0 0 1rem 0;
+    }
+    .rating-bar {
+      background: #f0f0f0;
+      border-radius: 9999px;
+      padding: 8px 16px;
+      display: inline-block;
+      margin: 0.5rem 0;
+    }
+    .rating-value {
+      color: #F6AD55;
+      font-weight: bold;
+      font-size: 1.3rem;
+    }
+    .total-reviews {
+      color: #777;
+      font-size: 0.9rem;
+    }
+    .queue-trend {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.9rem;
+      display: inline-block;
+      margin-top: 0.5rem;
+    }
+    .review-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .user-rating {
+      color: #F6AD55;
+      font-weight: bold;
+    }
+    .comment {
+      margin: 0.5rem 0;
+      line-height: 1.5;
+    }
+    .review-meta {
+      font-size: 0.85rem;
+      color: #777;
+      display: flex;
+      justify-content: space-between;
+    }
+    .back-home {
+      display: block;
+      text-align: center;
+      margin: 1rem 0;
+      color: #F6AD55;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #777;
+    }
+    .no-reviews {
+      text-align: center;
+      padding: 2rem;
+      color: #777;
+      background: white;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="stall-header" class="header">
+      <h1 class="stall-name">Loading...</h1>
+      <div class="hawker-centre" id="hawker-centre">-</div>
+      <div class="rating-bar">
+        <span class="rating-value" id="avg-rating">0.0</span>
+        <span class="total-reviews" id="total-reviews">(0 reviews)</span>
+      </div>
+      <div class="queue-trend" id="queue-trend">Loading queue trend...</div>
+    </div>
+
+    <div id="reviews-container" class="loading">
+      <p>Loading reviews...</p>
+    </div>
+
+    <a href="index.html" class="back-home">← Back to Home</a>
+  </div>
+
+  <script>
+    // 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbz89FaDzfT-dCYGOjjTpZTMUl3Pn0O3SOmErtHcepnb6rC4qJ6pftVDYyJESBo1XpHIDg/exec';
+
+    // Get stall name from URL parameter
+    function getStallNameFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('name');
+    }
+
+    // Get all reviews for this stall
+    async function loadStallReviews() {
+      const stallName = getStallNameFromURL();
+      if (!stallName) {
+        document.getElementById('stall-header').innerHTML = '<h2>Error: No stall specified</h2>';
+        document.getElementById('reviews-container').innerHTML = '<p>Please go back and select a stall.</p>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${scriptURL}?stall=${encodeURIComponent(stallName)}`, {
+          method: 'GET',
+          mode: 'cors'
+        });
+
+        if (!response.ok) throw new Error('Network response was not ok');
+
+        const data = await response.json();
+        const { stallInfo, reviews } = data;
+
+        if (!stallInfo) {
+          document.getElementById('stall-header').innerHTML = `<h2>Stall Not Found</h2>`;
+          document.getElementById('reviews-container').innerHTML = `<p>No data found for: ${stallName}</p>`;
+          return;
+        }
+
+        // Update header
+        document.querySelector('.stall-name').textContent = stallName;
+        document.getElementById('hawker-centre').textContent = stallInfo.hawkerCentre;
+        document.getElementById('avg-rating').textContent = stallInfo.avgRating.toFixed(1);
+        document.getElementById('total-reviews').textContent = `(${stallInfo.totalReviews} reviews)`;
+        document.getElementById('queue-trend').textContent = `🕒 Usually ${stallInfo.mostCommonQueue}`;
+
+        // Render reviews
+        const container = document.getElementById('reviews-container');
+        if (reviews.length === 0) {
+          container.className = 'no-reviews';
+          container.innerHTML = '<p>No reviews yet. Be the first to submit one!</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        container.className = '';
+
+        reviews.forEach(review => {
+          const reviewCard = document.createElement('div');
+          reviewCard.className = 'review-card';
+
+          // Format date
+          const date = new Date(review.timestamp);
+          const formattedDate = date.toLocaleDateString('en-SG', { 
+            day: 'numeric', 
+            month: 'short',
+            year: '2-digit'
+          });
+
+          // Build stars
+          let stars = '';
+          for (let i = 1; i <= 5; i++) {
+            stars += i <= review.rating ? '★' : '☆';
+          }
+
+          reviewCard.innerHTML = `
+            <div class="review-header">
+              <span class="user-rating">${stars}</span>
+              <span class="review-date">${formattedDate}</span>
+            </div>
+            <div class="comment">"${review.comment}"</div>
+            <div class="review-meta">
+              <span>Queue: ${review.queueTime}</span>
+              <span>${review.hawkerCentre}</span>
+            </div>
+          `;
+
+          container.appendChild(reviewCard);
+        });
+
+      } catch (error) {
+        console.error('Error loading stall reviews:', error);
+        document.getElementById('stall-header').innerHTML = '<h2>Error Loading Stall</h2>';
+        document.getElementById('reviews-container').innerHTML = '<p>❌ Failed to load reviews. Please try again later.</p>';
+      }
+    }
+
+    // Load when page is ready
+    document.addEventListener('DOMContentLoaded', loadStallReviews);
+  </script>
+</body>
+</html>

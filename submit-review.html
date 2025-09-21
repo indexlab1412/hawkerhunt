@@ -209,7 +209,7 @@
 
       try {
         // 👇 REPLACE THIS URL with your Google Apps Script Web App URL
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxsEtmyLbP2Ilbm4JtHJFeTBkbsRo9zJ0G_EWkwOsqv8YL_3-vS66cy472pUhbqkh_79Q/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbz89FaDzfT-dCYGOjjTpZTMUl3Pn0O3SOmErtHcepnb6rC4qJ6pftVDYyJESBo1XpHIDg/exec';
 
         const response = await fetch(scriptURL, {
           method: 'POST',
@@ -221,6 +221,10 @@
         });
 
         alert('✅ Thank you! Your review has been saved.');
+		// Redirect to stall page after 2 seconds
+		setTimeout(() => {
+		window.location.href = `stall.html?name=${encodeURIComponent(stallSelect.value)}`;
+		}, 2000);
         this.reset();
         stallSelect.innerHTML = '<option value="">Select a Stall (select Hawker Centre first)</option>';
       } catch (error) {
