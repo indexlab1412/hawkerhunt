@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HawkerHunt SG</title>
-  <link href="https://cdn.jsdelivr.net/npm/@chakra-ui/core@1.0.0-rc.8/dist/chakra-ui-core.min.css" rel="stylesheet"/>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
     .hero { background: #F6AD55; color: white; padding: 2rem; text-align: center; }
@@ -18,6 +17,61 @@
     .card img { width: 100%; height: 160px; object-fit: cover; }
     .card-body { padding: 1rem; }
     .footer { text-align: center; padding: 2rem; color: #aaa; font-size: 0.9rem; }
+
+    /* Review styles */
+    .review-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .stall-name {
+      font-weight: 600;
+      color: #333;
+    }
+    .rating {
+      color: #F6AD55;
+      font-weight: bold;
+    }
+    .hawker-centre {
+      font-size: 0.9rem;
+      color: #777;
+      margin-bottom: 0.5rem;
+    }
+    .comment {
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+    }
+    .queue {
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .section-title {
+      font-size: 1.3rem;
+      margin: 2rem 0 1rem 0;
+      color: #333;
+    }
+    .submit-review-btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: #F6AD55;
+      color: white;
+      padding: 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      margin: 1.5rem 0;
+    }
+    .submit-review-btn:hover {
+      background: #E59A40;
+    }
   </style>
 </head>
 <body>
@@ -25,23 +79,6 @@
     <h1 style="font-size: 2rem; margin: 0 0 0.5rem 0;">HawkerHunt SG</h1>
     <p>Discover the best hawker stalls. Skip the guesswork.</p>
   </div>
-  
-    <div style="text-align: center; margin: 1rem 0">
-      <a
-        href="submit-review.html"
-        style="
-          background: #f6ad55;
-          color: white;
-          padding: 12px 24px;
-          border-radius: 9999px;
-          text-decoration: none;
-          font-weight: 600;
-          display: inline-block;
-        "
-      >
-        ➕ Submit a Review
-      </a>
-    </div>
 
   <div class="container">
     <form id="searchForm">
@@ -77,23 +114,13 @@
       </div>
     </div>
 
-    <div class="card" onclick="alert('Old Airport Road')">
-      <img src="https://timeoutsingapore.files.wordpress.com/2020/07/old-airport-road-food-centre.jpg" alt="Old Airport Road">
-      <div class="card-body">
-        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">Old Airport Road</h3>
-        <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 Dakota MRT</p>
-        <p style="color: #999; font-size: 0.9rem; margin: 0;">🍜 180+ stalls</p>
-      </div>
+    <!-- Recent Reviews Section -->
+    <h2 class="section-title">⭐ Recent Reviews</h2>
+    <div id="reviews-container">
+      <p>Loading reviews...</p>
     </div>
 
-    <div class="card" onclick="alert('Tekka Centre')">
-      <img src="https://www.visitsingapore.com/content/dam/vs-cms-assets/attractions/tekka-centre/tekka-centre-little-india-16-9.jpg" alt="Tekka Centre">
-      <div class="card-body">
-        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">Tekka Centre</h3>
-        <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 Little India MRT</p>
-        <p style="color: #999; font-size: 0.9rem; margin: 0;">🍜 90+ stalls</p>
-      </div>
-    </div>
+    <a href="submit-review.html" class="submit-review-btn">➕ Submit Your Review</a>
   </div>
 
   <div class="footer">
@@ -114,12 +141,77 @@
     document.getElementById('nearMeBtn').addEventListener('click', function() {
       if (navigator.geolocation) {
         alert('📍 Finding hawker centres near you...');
-        // Later: connect to real location
         setTimeout(() => alert('Found 3 centres near you!'), 1500);
       } else {
         alert('Geolocation not supported. Try searching by name.');
       }
     });
+
+    // Load reviews from Google Apps Script
+    async function loadReviews() {
+      const container = document.getElementById('reviews-container');
+      container.innerHTML = '<p>Loading reviews...</p>';
+
+      try {
+        // 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbz61h26Ys1vl7vr2QWeZENgyflJ52RZJihRLMnKNEk8jwD9NwDMFxTBIRssw5aZ0awf6g/exec';
+
+        const response = await fetch(scriptURL, {
+          method: 'GET',
+          mode: 'cors' // Use 'cors' for GET requests
+        });
+
+        if (!response.ok) throw new Error('Network response was not ok');
+
+        const reviews = await response.json();
+
+        if (reviews.length === 0) {
+          container.innerHTML = '<p>No reviews yet. Be the first to submit one!</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+
+        reviews.forEach(review => {
+          const reviewCard = document.createElement('div');
+          reviewCard.className = 'review-card';
+
+          // Format date
+          const date = new Date(review.timestamp);
+          const formattedDate = date.toLocaleDateString('en-SG', { 
+            day: 'numeric', 
+            month: 'short' 
+          });
+
+          // Build stars
+          let stars = '';
+          for (let i = 1; i <= 5; i++) {
+            stars += i <= review.rating ? '★' : '☆';
+          }
+
+          reviewCard.innerHTML = `
+            <div class="review-header">
+              <span class="stall-name">${review.stallName}</span>
+              <span class="rating">${stars}</span>
+            </div>
+            <div class="hawker-centre">${review.hawkerCentre}</div>
+            <div class="comment">"${review.comment}"</div>
+            <div class="queue">🕒 Queue: ${review.queueTime} • ${formattedDate}</div>
+          `;
+
+          container.appendChild(reviewCard);
+        });
+
+      } catch (error) {
+        console.error('Error loading reviews:', error);
+        container.innerHTML = '<p>❌ Failed to load reviews. Please try again later.</p>';
+      }
+    }
+
+    // Load reviews when page loads
+    document.addEventListener('DOMContentLoaded', loadReviews);
+	// Refresh reviews every 600 seconds
+    setInterval(loadReviews, 600000);
   </script>
 </body>
 </html>
