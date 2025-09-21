@@ -209,7 +209,7 @@
 
       try {
         // 👇 REPLACE THIS URL with your Google Apps Script Web App URL
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbz89FaDzfT-dCYGOjjTpZTMUl3Pn0O3SOmErtHcepnb6rC4qJ6pftVDYyJESBo1XpHIDg/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxwukipkxHRbqy6PvpUL4RcSNAuVJexwC_eFa9IZEfvfr23qh5YNPvqERHWU95O2cZzLA/exec';
 
         const response = await fetch(scriptURL, {
           method: 'POST',
@@ -221,9 +221,21 @@
         });
 
         alert('✅ Thank you! Your review has been saved.');
-		// Redirect to stall page after 2 seconds
+		const stallName = stallSelect.value.trim();
+		if (!stallName) {
+		alert('❌ Error: Stall name is empty. Redirecting to homepage.');
 		setTimeout(() => {
-		window.location.href = `stall.html?name=${encodeURIComponent(stallSelect.value)}`;
+		window.location.href = 'index.html';
+		}, 2000);
+		return;
+		}
+
+		// Encode stall name for URL
+		const encodedStallName = encodeURIComponent(stallName);
+
+		// Redirect to stall page
+		setTimeout(() => {
+		window.location.href = `stall.html?name=${encodedStallName}`;
 		}, 2000);
         this.reset();
         stallSelect.innerHTML = '<option value="">Select a Stall (select Hawker Centre first)</option>';

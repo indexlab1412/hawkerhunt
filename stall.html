@@ -129,7 +129,7 @@
 
   <script>
     // 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbz89FaDzfT-dCYGOjjTpZTMUl3Pn0O3SOmErtHcepnb6rC4qJ6pftVDYyJESBo1XpHIDg/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxwukipkxHRbqy6PvpUL4RcSNAuVJexwC_eFa9IZEfvfr23qh5YNPvqERHWU95O2cZzLA/exec';
 
     // Get stall name from URL parameter
     function getStallNameFromURL() {
@@ -138,88 +138,122 @@
     }
 
     // Get all reviews for this stall
-    async function loadStallReviews() {
-      const stallName = getStallNameFromURL();
-      if (!stallName) {
-        document.getElementById('stall-header').innerHTML = '<h2>Error: No stall specified</h2>';
-        document.getElementById('reviews-container').innerHTML = '<p>Please go back and select a stall.</p>';
-        return;
-      }
+async function loadStallReviews() {
+  const params = new URLSearchParams(window.location.search);
+  const stallNameParam = params.get('name');
 
-      try {
-        const response = await fetch(`${scriptURL}?stall=${encodeURIComponent(stallName)}`, {
-          method: 'GET',
-          mode: 'cors'
-        });
+  if (!stallNameParam) {
+    document.getElementById('stall-header').innerHTML = '<h2>❌ Error: No stall specified</h2>';
+    document.getElementById('reviews-container').innerHTML = '<p>Please go back and select a stall.</p>';
+    return;
+  }
 
-        if (!response.ok) throw new Error('Network response was not ok');
+  // Decode stall name
+  let stallName;
+  try {
+    stallName = decodeURIComponent(stallNameParam);
+  } catch (e) {
+    document.getElementById('stall-header').innerHTML = '<h2>❌ Error: Invalid stall name</h2>';
+    document.getElementById('reviews-container').innerHTML = '<p>The stall name in the URL is malformed.</p>';
+    return;
+  }
 
-        const data = await response.json();
-        const { stallInfo, reviews } = data;
+  if (!stallName.trim()) {
+    document.getElementById('stall-header').innerHTML = '<h2>❌ Error: Empty stall name</h2>';
+    document.getElementById('reviews-container').innerHTML = '<p>Please go back and select a valid stall.</p>';
+    return;
+  }
 
-        if (!stallInfo) {
-          document.getElementById('stall-header').innerHTML = `<h2>Stall Not Found</h2>`;
-          document.getElementById('reviews-container').innerHTML = `<p>No data found for: ${stallName}</p>`;
-          return;
-        }
+  try {
+    const response = await fetch(`${scriptURL}?stall=${encodeURIComponent(stallName)}`, {
+      method: 'GET',
+      mode: 'cors'
+    });
 
-        // Update header
-        document.querySelector('.stall-name').textContent = stallName;
-        document.getElementById('hawker-centre').textContent = stallInfo.hawkerCentre;
-        document.getElementById('avg-rating').textContent = stallInfo.avgRating.toFixed(1);
-        document.getElementById('total-reviews').textContent = `(${stallInfo.totalReviews} reviews)`;
-        document.getElementById('queue-trend').textContent = `🕒 Usually ${stallInfo.mostCommonQueue}`;
-
-        // Render reviews
-        const container = document.getElementById('reviews-container');
-        if (reviews.length === 0) {
-          container.className = 'no-reviews';
-          container.innerHTML = '<p>No reviews yet. Be the first to submit one!</p>';
-          return;
-        }
-
-        container.innerHTML = '';
-        container.className = '';
-
-        reviews.forEach(review => {
-          const reviewCard = document.createElement('div');
-          reviewCard.className = 'review-card';
-
-          // Format date
-          const date = new Date(review.timestamp);
-          const formattedDate = date.toLocaleDateString('en-SG', { 
-            day: 'numeric', 
-            month: 'short',
-            year: '2-digit'
-          });
-
-          // Build stars
-          let stars = '';
-          for (let i = 1; i <= 5; i++) {
-            stars += i <= review.rating ? '★' : '☆';
-          }
-
-          reviewCard.innerHTML = `
-            <div class="review-header">
-              <span class="user-rating">${stars}</span>
-              <span class="review-date">${formattedDate}</span>
-            </div>
-            <div class="comment">"${review.comment}"</div>
-            <div class="review-meta">
-              <span>Queue: ${review.queueTime}</span>
-              <span>${review.hawkerCentre}</span>
-            </div>
-          `;
-
-          container.appendChild(reviewCard);
-        });
-
-      } catch (error) {
-        console.error('Error loading stall reviews:', error);
-        document.getElementById('stall-header').innerHTML = '<h2>Error Loading Stall</h2>';
-        document.getElementById('reviews-container').innerHTML = '<p>❌ Failed to load reviews. Please try again later.</p>';
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
+
+    const data = await response.json();
+
+    // Handle case where stall not found
+    if (!data.stallInfo) {
+      document.querySelector('.stall-name').textContent = stallName;
+      document.getElementById('hawker-centre').textContent = 'Not found';
+      document.getElementById('avg-rating').textContent = '0.0';
+      document.getElementById('total-reviews').textContent = '(0 reviews)';
+      document.getElementById('queue-trend').textContent = 'No data yet';
+
+      const container = document.getElementById('reviews-container');
+      container.className = 'no-reviews';
+      container.innerHTML = `
+        <p>No reviews found for "<strong>${stallName}</strong>".</p>
+        <p>Be the first to <a href="submit-review.html">submit a review</a>!</p>
+      `;
+      return;
+    }
+
+    // Update header with stall info
+    document.querySelector('.stall-name').textContent = stallName;
+    document.getElementById('hawker-centre').textContent = data.stallInfo.hawkerCentre;
+    document.getElementById('avg-rating').textContent = data.stallInfo.avgRating.toFixed(1);
+    document.getElementById('total-reviews').textContent = `(${data.stallInfo.totalReviews} reviews)`;
+    document.getElementById('queue-trend').textContent = `🕒 Usually ${data.stallInfo.mostCommonQueue}`;
+
+    // Render reviews
+    const container = document.getElementById('reviews-container');
+    if (data.reviews.length === 0) {
+      container.className = 'no-reviews';
+      container.innerHTML = '<p>No reviews yet. Be the first to submit one!</p>';
+      return;
+    }
+
+    container.innerHTML = '';
+    container.className = '';
+
+    data.reviews.forEach(review => {
+      const reviewCard = document.createElement('div');
+      reviewCard.className = 'review-card';
+
+      // Format date
+      const date = new Date(review.timestamp);
+      const formattedDate = date.toLocaleDateString('en-SG', { 
+        day: 'numeric', 
+        month: 'short',
+        year: '2-digit'
+      });
+
+      // Build stars
+      let stars = '';
+      for (let i = 1; i <= 5; i++) {
+        stars += i <= review.rating ? '★' : '☆';
+      }
+
+      reviewCard.innerHTML = `
+        <div class="review-header">
+          <span class="user-rating">${stars}</span>
+          <span class="review-date">${formattedDate}</span>
+        </div>
+        <div class="comment">"${review.comment}"</div>
+        <div class="review-meta">
+          <span>Queue: ${review.queueTime}</span>
+          <span>${review.hawkerCentre}</span>
+        </div>
+      `;
+
+      container.appendChild(reviewCard);
+    });
+
+  } catch (error) {
+    console.error('Error loading stall reviews:', error);
+    document.getElementById('stall-header').innerHTML = '<h2>❌ Error Loading Stall</h2>';
+    document.getElementById('reviews-container').innerHTML = `
+      <p>Failed to load reviews for: <strong>${stallName}</strong></p>
+      <p>Reason: ${error.message}</p>
+      <p><a href="index.html">← Back to Home</a></p>
+    `;
+  }
+}
 
     // Load when page is ready
     document.addEventListener('DOMContentLoaded', loadStallReviews);
