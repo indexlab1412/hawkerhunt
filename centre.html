@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hawker Centre - HawkerHunt SG</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    .header {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .centre-name {
+      font-size: 1.8rem;
+      color: #333;
+      margin: 0 0 0.5rem 0;
+    }
+    .stall-count {
+      color: #777;
+      font-size: 1rem;
+    }
+    .filters {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .filter-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .filter-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .filter-select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .stall-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .stall-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stall-info {
+      flex: 1;
+    }
+    .stall-name {
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+    .stall-rating {
+      color: #F6AD55;
+      font-weight: bold;
+    }
+    .view-reviews {
+      background: #F6AD55;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .view-reviews:hover {
+      background: #E59A40;
+    }
+    .back-home {
+      display: block;
+      text-align: center;
+      margin: 1rem 0;
+      color: #F6AD55;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="centre-name" id="centre-name">Loading...</h1>
+      <div class="stall-count" id="stall-count">-</div>
+    </div>
+
+    <div class="filters">
+      <div class="filter-row">
+        <input type="text" id="stallSearch" class="filter-input" placeholder="Search stalls...">
+        <select id="sortSelect" class="filter-select">
+          <option value="name">Sort by Name</option>
+          <option value="rating">Sort by Rating</option>
+          <option value="reviews">Sort by Review Count</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="stalls-container" class="loading">
+      <p>Loading stalls...</p>
+    </div>
+
+    <a href="index.html" class="back-home">← Back to Home</a>
+  </div>
+
+  <script>
+    // 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycby1na25Wopg0jlqbV1M0JQGGWWiF2NijobmHROEWEXdrUTIdfIGWfdgbB6uqut4CDQftg/exec';
+
+    function getCentreNameFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('name');
+    }
+
+    let allStalls = [];
+
+    async function loadCentreStalls() {
+      const centreName = getCentreNameFromURL();
+      if (!centreName) {
+        document.getElementById('centre-name').textContent = 'Error: No centre specified';
+        document.getElementById('stalls-container').innerHTML = '<p>Please go back and select a hawker centre.</p>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${scriptURL}?centre=${encodeURIComponent(centreName)}`, {
+          method: 'GET',
+          mode: 'cors'
+        });
+
+        if (!response.ok) throw new Error('Network error');
+
+        const stalls = await response.json();
+        allStalls = stalls;
+
+        document.getElementById('centre-name').textContent = centreName;
+        document.getElementById('stall-count').textContent = `${stalls.length} stalls`;
+
+        renderStalls(stalls);
+
+        // Setup filters
+        document.getElementById('stallSearch').addEventListener('input', filterStalls);
+        document.getElementById('sortSelect').addEventListener('change', sortAndRender);
+
+      } catch (error) {
+        console.error('Error loading centre:', error);
+        document.getElementById('centre-name').textContent = 'Error Loading Centre';
+        document.getElementById('stalls-container').innerHTML = '<p>❌ Failed to load stalls. Please try again later.</p>';
+      }
+    }
+
+    function renderStalls(stalls) {
+      const container = document.getElementById('stalls-container');
+      if (stalls.length === 0) {
+        container.innerHTML = '<p>No stalls found. Be the first to submit a review!</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      stalls.forEach(stall => {
+        const div = document.createElement('div');
+        div.className = 'stall-card';
+        div.innerHTML = `
+          <div class="stall-info">
+            <div class="stall-name">${stall.stallName}</div>
+            <div class="stall-rating">★ ${stall.avgRating.toFixed(1)} (${stall.reviewCount} reviews)</div>
+          </div>
+          <button class="view-reviews" onclick="window.location.href='stall.html?name=${encodeURIComponent(stall.stallName)}'">View Reviews</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function filterStalls() {
+      const query = document.getElementById('stallSearch').value.toLowerCase();
+      const filtered = allStalls.filter(stall => 
+        stall.stallName.toLowerCase().includes(query)
+      );
+      sortAndRender(filtered);
+    }
+
+    function sortAndRender(stallsToSort = null) {
+      const stalls = stallsToSort || allStalls;
+      const sortBy = document.getElementById('sortSelect').value;
+
+      let sorted = [...stalls];
+      if (sortBy === 'name') {
+        sorted.sort((a, b) => a.stallName.localeCompare(b.stallName));
+      } else if (sortBy === 'rating') {
+        sorted.sort((a, b) => b.avgRating - a.avgRating);
+      } else if (sortBy === 'reviews') {
+        sorted.sort((a, b) => b.reviewCount - a.reviewCount);
+      }
+
+      renderStalls(sorted);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCentreStalls);
+  </script>
+</body>
+</html>
