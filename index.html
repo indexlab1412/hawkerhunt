@@ -13,12 +13,23 @@
     .search-box button { padding: 12px 24px; border-radius: 9999px; cursor: pointer; }
     .orange-btn { background: #F6AD55; color: white; border: none; }
     .outline-btn { background: white; color: #F6AD55; border: 2px solid #F6AD55; }
-    .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+    .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1rem; cursor: pointer; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); transition: all 0.2s; }
     .card img { width: 100%; height: 160px; object-fit: cover; }
     .card-body { padding: 1rem; }
     .footer { text-align: center; padding: 2rem; color: #aaa; font-size: 0.9rem; }
-
-    /* Review styles */
+    .section-title { font-size: 1.3rem; margin: 2rem 0 1rem 0; color: #333; }
+    .view-all { text-align: center; margin: 1rem 0; }
+    .view-all-btn { 
+      background: #4299E1; 
+      color: white; 
+      padding: 12px 24px; 
+      border-radius: 8px; 
+      text-decoration: none; 
+      font-weight: 600;
+      display: inline-block;
+    }
+    .view-all-btn:hover { background: #3182CE; }
     .review-card {
       background: white;
       border-radius: 12px;
@@ -52,11 +63,6 @@
       font-size: 0.9rem;
       color: #555;
     }
-    .section-title {
-      font-size: 1.3rem;
-      margin: 2rem 0 1rem 0;
-      color: #333;
-    }
     .submit-review-btn {
       display: block;
       width: 100%;
@@ -72,20 +78,6 @@
     .submit-review-btn:hover {
       background: #E59A40;
     }
-	.suggestion-item {
-  padding: 12px 16px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-  font-weight: 500;
-}
-.suggestion-item:hover {
-  background: #f9f9f9;
-}
-.suggestion-centre {
-  font-size: 0.85rem;
-  color: #777;
-  font-weight: normal;
-}
   </style>
 </head>
 <body>
@@ -96,11 +88,10 @@
 
   <div class="container">
     <form id="searchForm">
-<div class="search-box">
-  <input type="text" id="searchInput" placeholder="Search stall or hawker centre (e.g. 'Chicken Rice')" />
-  <button type="submit" class="orange-btn">Search</button>
-</div>
-<div id="suggestions-container" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 4px; display: none; max-height: 300px; overflow-y: auto; z-index: 100;"></div>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search hawker centre or MRT (e.g. 'Maxwell', 'Bugis')" />
+        <button type="submit" class="orange-btn">Search</button>
+      </div>
       <div style="text-align: center; margin: 1rem 0;">
         <button type="button" id="nearMeBtn" class="outline-btn" style="display: inline-flex; align-items: center; gap: 6px;">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C4.6 0 2 2.6 2 6c0 1.5.6 3 1.7 4.1L8 16l4.3-5.9C13.4 9 14 7.5 14 6c0-3.4-2.6-6-6-6zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
@@ -109,60 +100,17 @@
       </div>
     </form>
 
-<h2 class="section-title">🏆 Featured Hawker Centres</h2>
-<div id="featured-centres">
-  <p>Loading featured centres...</p>
-</div>
-<div class="card" onclick="window.location.href='centre.html?name=Chinatown%20Complex'">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Chinatown_Complex_Food_Centre.jpg" alt="Chinatown Complex">
-  <div class="card-body">
-    <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">Chinatown Complex</h3>
-    <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 Chinatown MRT</p>
-    <p style="color: #999; font-size: 0.9rem; margin: 0;">🍜 260+ stalls</p>
-  </div>
-</div>
+    <!-- Featured Centres -->
+    <h2 class="section-title">🏆 Featured Hawker Centres</h2>
+    <div id="featured-centres">
+      <p>Loading featured centres...</p>
+    </div>
+    
+    <div class="view-all">
+      <a href="all-centres.html" class="view-all-btn">View All Centres →</a>
+    </div>
 
-<script src="data.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Shuffle array (Fisher-Yates)
-    function shuffleArray(array) {
-      let currentIndex = array.length, randomIndex;
-      while (currentIndex != 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-      }
-      return array;
-    }
-
-    // Get 2 random centres
-    const shuffled = shuffleArray([...hawkerData]);
-    const featured = shuffled.slice(0, 2);
-
-    const container = document.getElementById('featured-centres');
-    container.innerHTML = '';
-
-    featured.forEach(centre => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <img src="${centre.image}" alt="${centre.name}" style="width:100%; height:160px; object-fit:cover;">
-        <div class="card-body">
-          <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">${centre.name}</h3>
-          <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 ${centre.mrt}</p>
-          <p style="color: #999; font-size: 0.9rem; margin: 0;">🍜 ${centre.stalls.length}+ stalls</p>
-        </div>
-      `;
-      card.addEventListener('click', () => {
-        alert(`Navigate to ${centre.name} (you can link to a centre page later!)`);
-      });
-      container.appendChild(card);
-    });
-  });
-</script>
-
-    <!-- Recent Reviews Section -->
+    <!-- Recent Reviews -->
     <h2 class="section-title">⭐ Recent Reviews</h2>
     <div id="reviews-container">
       <p>Loading reviews...</p>
@@ -175,6 +123,7 @@
     Built with ❤️ for Singapore’s Hawker Culture
   </div>
 
+  <script src="data.js"></script>
   <script>
     document.getElementById('searchForm').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -195,6 +144,41 @@
       }
     });
 
+    // Load featured centres (random 3)
+    function loadFeaturedCentres() {
+      const container = document.getElementById('featured-centres');
+      
+      if (!window.centreDatabase || window.centreDatabase.length === 0) {
+        container.innerHTML = '<p>No centres available.</p>';
+        return;
+      }
+
+      // Get random 3 centres
+      const shuffled = [...window.centreDatabase].sort(() => 0.5 - Math.random());
+      const featured = shuffled.slice(0, 3);
+
+      container.innerHTML = '';
+
+      featured.forEach(centre => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.onclick = () => {
+          window.location.href = `centre.html?name=${encodeURIComponent(centre.name)}`;
+        };
+
+        card.innerHTML = `
+          <img src="${centre.image || 'https://via.placeholder.com/300x160?text=Hawker+Centre'}" alt="${centre.name}">
+          <div class="card-body">
+            <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">${centre.name}</h3>
+            <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 ${centre.mrt}</p>
+            <p style="color: #999; font-size: 0.9rem; margin: 0;">📍 ${centre.address}</p>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
     // Load reviews from Google Apps Script
     async function loadReviews() {
       const container = document.getElementById('reviews-container');
@@ -206,7 +190,7 @@
 
         const response = await fetch(scriptURL, {
           method: 'GET',
-          mode: 'cors' // Use 'cors' for GET requests
+          mode: 'cors'
         });
 
         if (!response.ok) throw new Error('Network response was not ok');
@@ -224,14 +208,12 @@
           const reviewCard = document.createElement('div');
           reviewCard.className = 'review-card';
 
-          // Format date
           const date = new Date(review.timestamp);
           const formattedDate = date.toLocaleDateString('en-SG', { 
             day: 'numeric', 
             month: 'short' 
           });
 
-          // Build stars
           let stars = '';
           for (let i = 1; i <= 5; i++) {
             stars += i <= review.rating ? '★' : '☆';
@@ -255,72 +237,12 @@
         container.innerHTML = '<p>❌ Failed to load reviews. Please try again later.</p>';
       }
     }
-	
-	// 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-const scriptURL = 'https://script.google.com/macros/s/AKfycby1na25Wopg0jlqbV1M0JQGGWWiF2NijobmHROEWEXdrUTIdfIGWfdgbB6uqut4CDQftg/exec';
 
-let debounceTimer;
-
-document.getElementById('searchInput').addEventListener('input', function(e) {
-  const query = e.target.value.trim();
-  const container = document.getElementById('suggestions-container');
-  
-  clearTimeout(debounceTimer);
-  
-  if (query.length < 2) {
-    container.style.display = 'none';
-    return;
-  }
-
-  debounceTimer = setTimeout(async () => {
-    try {
-      const response = await fetch(`${scriptURL}?search=${encodeURIComponent(query)}`, {
-        method: 'GET',
-        mode: 'cors'
-      });
-
-      if (!response.ok) throw new Error('Network error');
-
-      const results = await response.json();
-      
-      if (results.length === 0) {
-        container.style.display = 'none';
-        return;
-      }
-
-      container.innerHTML = '';
-      results.forEach(result => {
-        const div = document.createElement('div');
-        div.className = 'suggestion-item';
-        div.innerHTML = `
-          ${result.stallName}<br>
-          <span class="suggestion-centre">${result.hawkerCentre}</span>
-        `;
-        div.addEventListener('click', () => {
-          window.location.href = `stall.html?name=${encodeURIComponent(result.stallName)}`;
-        });
-        container.appendChild(div);
-      });
-
-      container.style.display = 'block';
-    } catch (error) {
-      console.error('Search error:', error);
-      container.style.display = 'none';
-    }
-  }, 300); // 300ms debounce
-});
-
-// Hide suggestions when clicking outside
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.search-box') && !e.target.closest('#suggestions-container')) {
-    document.getElementById('suggestions-container').style.display = 'none';
-  }
-});
-
-    // Load reviews when page loads
-    document.addEventListener('DOMContentLoaded', loadReviews);
-	// Refresh reviews every 600 seconds
-    setInterval(loadReviews, 600000);
+    // Load when page is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      loadFeaturedCentres();
+      loadReviews();
+    });
   </script>
 </body>
 </html>
