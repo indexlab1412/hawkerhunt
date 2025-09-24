@@ -152,6 +152,31 @@
       line-height: 1.6;
       color: #555;
     }
+	.stamp {
+  width: 50px;
+  height: 50px;
+  border: 2px dashed #ccc;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #aaa;
+  background: white;
+  transition: all 0.3s;
+}
+
+.stamp.filled {
+  border: 2px solid #F6AD55;
+  background: #fff8e6;
+  color: #F6AD55;
+  font-weight: bold;
+}
+
+#redeem-btn:hover {
+  background: #38A169;
+  transform: scale(1.02);
+}
   </style>
 </head>
 <body>
@@ -195,7 +220,36 @@
         <p>Loading reviews...</p>
       </div>
     </div>
+<!-- Loyalty Stamp Card -->
+<div class="section">
+  <h2 class="section-title">🎟️ Loyalty Stamps</h2>
+  <p>Earn a stamp each day you visit! Get 10 stamps to redeem a reward.</p>
+  
+  <div style="text-align: center; margin: 1.5rem 0;">
+    <div id="stamp-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; max-width: 300px; margin: 0 auto;">
+      <!-- Stamps will appear here -->
+    </div>
+  </div>
 
+  <div id="stamp-status" style="text-align: center; margin: 1rem 0; min-height: 24px; color: #777;">
+    <!-- Status message -->
+  </div>
+
+  <button id="redeem-btn" style="display: none; width: 100%; padding: 14px; background: #48BB78; color: white; border: none; border-radius: 8px; font-weight: 600; margin-top: 1rem;">
+    🎉 Redeem Your Reward!
+  </button>
+
+  <div id="qr-instructions" style="margin-top: 1.5rem; padding: 1rem; background: #f0f9ff; border-radius: 8px; display: none;">
+    <p><strong>Stall Owner:</strong> Display this QR code at your counter!</p>
+    <div id="qr-placeholder" style="background: white; padding: 12px; border-radius: 8px; display: inline-block; margin-top: 8px;">
+      <img id="qr-code-img" src="" alt="QR Code" style="max-width: 150px; display: none;" />
+      <p id="qr-loading">Generating QR code...</p>
+    </div>
+    <p style="font-size: 0.85rem; margin-top: 8px; color: #555;">
+      Customers scan this to earn stamps.
+    </p>
+  </div>
+</div>
     <a href="index.html" class="back-home">← Back to Home</a>
   </div>
 
@@ -344,6 +398,127 @@
     }
 
     document.addEventListener('DOMContentLoaded', loadStallData);
+	// =============== LOYALTY STAMP SYSTEM ===============
+function getStallKey(stallName) {
+  return `stamps_${btoa(stallName)}`; // Encode to avoid special chars
+}
+
+function getCurrentDate() {
+  const now = new Date();
+  return now.toISOString().split('T')[0]; // YYYY-MM-DD
+}
+
+function canAddNewStamp(stampDates) {
+  if (stampDates.length === 0) return true;
+  const lastStamp = stampDates[stampDates.length - 1];
+  const today = getCurrentDate();
+  return lastStamp !== today; // Only one stamp per day
+}
+
+function addStamp(stallName) {
+  const key = getStallKey(stallName);
+  const today = getCurrentDate();
+  
+  let stamps = JSON.parse(localStorage.getItem(key) || '[]');
+  
+  if (stamps.length >= 10) {
+    return; // Already completed
+  }
+  
+  if (canAddNewStamp(stamps)) {
+    stamps.push(today);
+    localStorage.setItem(key, JSON.stringify(stamps));
+    renderStamps(stallName);
+  }
+}
+
+function renderStamps(stallName) {
+  const key = getStallKey(stallName);
+  const stamps = JSON.parse(localStorage.getItem(key) || '[]');
+  const grid = document.getElementById('stamp-grid');
+  const status = document.getElementById('stamp-status');
+  const redeemBtn = document.getElementById('redeem-btn');
+
+  // Clear grid
+  grid.innerHTML = '';
+
+  // Render 10 stamps
+  for (let i = 0; i < 10; i++) {
+    const stamp = document.createElement('div');
+    stamp.className = 'stamp';
+    if (i < stamps.length) {
+      stamp.classList.add('filled');
+      // Show last 2 digits of year + month (e.g., 25-04)
+      const date = new Date(stamps[i]);
+      const label = `${date.getFullYear().toString().slice(-2)}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      stamp.textContent = label;
+    } else {
+      stamp.textContent = i + 1;
+    }
+    grid.appendChild(stamp);
+  }
+
+  // Update status
+  if (stamps.length === 0) {
+    status.textContent = 'No stamps yet. Visit today to get your first!';
+  } else if (stamps.length < 10) {
+    const next = 10 - stamps.length;
+    status.textContent = `You have ${stamps.length} stamp${stamps.length !== 1 ? 's' : ''}. ${next} more to go!`;
+  } else {
+    status.textContent = '🎉 Congratulations! You’ve earned 10 stamps!';
+    redeemBtn.style.display = 'block';
+  }
+}
+
+// Handle redeem button
+document.getElementById('redeem-btn')?.addEventListener('click', function() {
+  alert('🎉 Show this screen to the stall owner to claim your reward!');
+  // Optional: Add confetti, sound, or reset after redemption
+});
+
+// =============== QR CODE GENERATION (for stall owners) ===============
+async function generateQRCode(stallName) {
+  const qrContainer = document.getElementById('qr-placeholder');
+  const qrImg = document.getElementById('qr-code-img');
+  const qrLoading = document.getElementById('qr-loading');
+
+  try {
+    // Use a free QR API
+    const url = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(stallName)}&stamp=1`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+    
+    qrImg.src = qrUrl;
+    qrImg.style.display = 'block';
+    qrLoading.style.display = 'none';
+  } catch (error) {
+    qrLoading.textContent = 'Failed to generate QR code.';
+    console.error('QR Error:', error);
+  }
+}
+
+// Show QR code section only if URL has ?stamp=1 (stall owner view)
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('stamp') === '1') {
+  document.getElementById('qr-instructions').style.display = 'block';
+  const stallName = decodeURIComponent(urlParams.get('name') || '');
+  if (stallName) {
+    generateQRCode(stallName);
+  }
+}
+
+// Auto-add stamp if URL has ?stamp=1
+if (urlParams.get('stamp') === '1') {
+  const stallName = decodeURIComponent(urlParams.get('name') || '');
+  if (stallName) {
+    addStamp(stallName);
+  }
+}
+
+// Initial render
+const currentStall = getStallNameFromURL();
+if (currentStall) {
+  renderStamps(decodeURIComponent(currentStall));
+}
   </script>
 </body>
 </html>
