@@ -289,10 +289,12 @@
       <h2 class="section-title">🎟️ Loyalty Stamps</h2>
       <p>Earn a stamp each day you visit! Get 10 stamps to redeem a reward.</p>
       
-      <div style="text-align: center; margin: 1.5rem 0;">
-        <button id="scan-btn" style="background: #4299E1; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">
-          📷 Scan QR Code to Earn Stamp
-        </button>
+<button id="scan-btn" style="background: #4299E1; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; position: relative;">
+  📷 Scan QR Code to Earn Stamp
+  <span id="ios-warning" style="display: none; position: absolute; top: -28px; left: 50%; transform: translateX(-50%); background: #FFD700; color: #333; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; white-space: nowrap;">
+    iPhone? Use Safari!
+  </span>
+</button>
       </div>
 
       <div style="text-align: center; margin: 1.5rem 0;">
@@ -341,6 +343,9 @@
   <script src="data.js"></script>
   <script>
     // =============== HELPER FUNCTIONS ===============
+	function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+}
     function getStallNameFromURL() {
       const params = new URLSearchParams(window.location.search);
       return params.get('name');
@@ -473,33 +478,62 @@
     // =============== QR SCANNER ===============
     let qrScanner = null;
 
-    function startQRScanner() {
-      const videoContainer = document.getElementById('qr-video-container');
-      const overlay = document.getElementById('qr-scanner-overlay');
-      
-      overlay.style.display = 'flex';
-      
-      if (qrScanner) {
-        qrScanner.destroy();
-      }
+async function startQRScanner() {
+  const videoContainer = document.getElementById('qr-video-container');
+  const overlay = document.getElementById('qr-scanner-overlay');
+  
+  overlay.style.display = 'flex';
+  
+  if (qrScanner) {
+    qrScanner.destroy();
+  }
 
-      const video = document.createElement('video');
-      video.style.width = '100%';
-      video.style.height = '100%';
-      video.style.objectFit = 'cover';
-      videoContainer.innerHTML = '';
-      videoContainer.appendChild(video);
+  const video = document.createElement('video');
+  video.style.width = '100%';
+  video.style.height = '100%';
+  video.style.objectFit = 'cover';
+  videoContainer.innerHTML = '';
+  videoContainer.appendChild(video);
 
-      qrScanner = new QrScanner(video, (result) => {
-        handleScannedQR(result);
-      }, {
-        onDecodeError: () => {},
-        highlightScanRegion: true,
-        highlightCodeOutline: true
-      });
+  // Try to start scanner
+  try {
+    qrScanner = new QrScanner(video, (result) => {
+      handleScannedQR(result);
+    }, {
+      onDecodeError: () => {},
+      highlightScanRegion: true,
+      highlightCodeOutline: true
+    });
 
-      qrScanner.start();
-    }
+    await qrScanner.start();
+  } catch (error) {
+    console.error('Camera error:', error);
+    
+    // Show user-friendly error
+    videoContainer.innerHTML = `
+      <div style="color: white; text-align: center; padding: 20px;">
+        <div>❌ Camera access denied</div>
+        <div style="font-size: 0.9rem; margin-top: 10px;">
+          Please allow camera access or try these steps:
+        </div>
+        <ul style="font-size: 0.85rem; margin-top: 10px; text-align: left; padding-left: 20px;">
+          <li><strong>On Android:</strong> Tap the camera icon in the address bar</li>
+          <li><strong>On iPhone:</strong> Open this page in <strong>Safari</strong> (Chrome on iOS blocks camera)</li>
+          <li>Refresh the page and tap "Allow" when prompted</li>
+        </ul>
+        <button id="retry-camera-btn" style="margin-top: 15px; background: #4299E1; color: white; border: none; padding: 8px 16px; border-radius: 6px;">
+          Retry Camera
+        </button>
+      </div>
+    `;
+    
+    // Add retry button
+    document.getElementById('retry-camera-btn')?.addEventListener('click', () => {
+      stopQRScanner();
+      startQRScanner();
+    });
+  }
+}
 
     function handleScannedQR(qrData) {
       try {
@@ -716,6 +750,11 @@
     // =============== EVENT LISTENERS ===============
     document.addEventListener('DOMContentLoaded', function() {
       loadStallData();
+	  
+	  // Show iOS warning
+if (isIOS()) {
+  document.getElementById('ios-warning').style.display = 'block';
+}
 
       // QR Scan buttons
       document.getElementById('scan-btn')?.addEventListener('click', startQRScanner);
