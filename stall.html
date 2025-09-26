@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<!-- Required for camera on Android -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
   <title>Stall Detail - HawkerHunt SG</title>
   <script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.css">
@@ -342,6 +347,10 @@
 
   <script src="data.js"></script>
   <script>
+  // Redirect to HTTPS if needed (GitHub Pages should already be HTTPS)
+if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+  location.replace(`https:${location.href.substring(location.protocol.length)}`);
+}
     // =============== HELPER FUNCTIONS ===============
 	function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -492,42 +501,61 @@ async function startQRScanner() {
   video.style.width = '100%';
   video.style.height = '100%';
   video.style.objectFit = 'cover';
+  video.setAttribute('playsinline', 'true'); // Critical for iOS/Android
   videoContainer.innerHTML = '';
   videoContainer.appendChild(video);
 
-  // Try to start scanner
   try {
+    // First, check if camera is available
+    const hasCamera = await QrScanner.hasCamera();
+    if (!hasCamera) {
+      throw new Error('No camera found');
+    }
+
     qrScanner = new QrScanner(video, (result) => {
       handleScannedQR(result);
     }, {
-      onDecodeError: () => {},
+      onDecodeError: (error) => {
+        console.log('Decode error:', error);
+      },
       highlightScanRegion: true,
       highlightCodeOutline: true
     });
 
+    // Start scanner
     await qrScanner.start();
+
   } catch (error) {
-    console.error('Camera error:', error);
+    console.error('Camera access failed:', error);
     
-    // Show user-friendly error
+    let message = 'Camera access denied or not available.';
+    
+    // Detect likely causes
+    if (location.protocol !== 'https:') {
+      message = 'Camera only works on HTTPS sites. Please open via https://';
+    } else if (navigator.mediaDevices === undefined) {
+      message = 'Your browser does not support camera access.';
+    } else if (error.name === 'NotAllowedError') {
+      message = 'Please allow camera access when prompted.';
+    } else if (error.name === 'NotFoundError') {
+      message = 'No camera found on this device.';
+    }
+
     videoContainer.innerHTML = `
-      <div style="color: white; text-align: center; padding: 20px;">
-        <div>❌ Camera access denied</div>
-        <div style="font-size: 0.9rem; margin-top: 10px;">
-          Please allow camera access or try these steps:
+      <div style="color: white; text-align: center; padding: 20px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
+        <div>❌ ${message}</div>
+        <div style="font-size: 0.9rem; margin-top: 15px;">
+          <strong>On Android:</strong><br>
+          1. Tap the 🔒 lock icon in the address bar<br>
+          2. Set Camera to "Allow"<br>
+          3. Refresh the page and try again
         </div>
-        <ul style="font-size: 0.85rem; margin-top: 10px; text-align: left; padding-left: 20px;">
-          <li><strong>On Android:</strong> Tap the camera icon in the address bar</li>
-          <li><strong>On iPhone:</strong> Open this page in <strong>Safari</strong> (Chrome on iOS blocks camera)</li>
-          <li>Refresh the page and tap "Allow" when prompted</li>
-        </ul>
-        <button id="retry-camera-btn" style="margin-top: 15px; background: #4299E1; color: white; border: none; padding: 8px 16px; border-radius: 6px;">
-          Retry Camera
+        <button id="retry-camera-btn" style="margin-top: 20px; background: #4299E1; color: white; border: none; padding: 10px 20px; border-radius: 8px;">
+          Retry
         </button>
       </div>
     `;
     
-    // Add retry button
     document.getElementById('retry-camera-btn')?.addEventListener('click', () => {
       stopQRScanner();
       startQRScanner();
