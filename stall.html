@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Stall Detail - HawkerHunt SG</title>
+  <script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -152,31 +154,84 @@
       line-height: 1.6;
       color: #555;
     }
-	.stamp {
-  width: 50px;
-  height: 50px;
-  border: 2px dashed #ccc;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  color: #aaa;
-  background: white;
-  transition: all 0.3s;
-}
 
-.stamp.filled {
-  border: 2px solid #F6AD55;
-  background: #fff8e6;
-  color: #F6AD55;
-  font-weight: bold;
-}
+    /* Loyalty Stamps */
+    .stamp {
+      width: 50px;
+      height: 50px;
+      border: 2px dashed #ccc;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #aaa;
+      background: white;
+      transition: all 0.3s;
+    }
+    .stamp.filled {
+      border: 2px solid #F6AD55;
+      background: #fff8e6;
+      color: #F6AD55;
+      font-weight: bold;
+    }
+    #redeem-btn {
+      display: none;
+      width: 100%;
+      padding: 14px;
+      background: #48BB78;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    #redeem-btn:hover {
+      background: #38A169;
+      transform: scale(1.02);
+    }
 
-#redeem-btn:hover {
-  background: #38A169;
-  transform: scale(1.02);
-}
+    /* Offers */
+    .offer-card {
+      flex: 0 0 auto;
+      scroll-snap-align: start;
+      background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+      border: 2px dashed #F57C00;
+      border-radius: 12px;
+      padding: 1rem;
+      min-width: 280px;
+      box-sizing: border-box;
+    }
+    .offer-title {
+      font-weight: bold;
+      color: #E65100;
+      margin: 0 0 0.5rem 0;
+    }
+    .offer-desc {
+      font-size: 0.95rem;
+      color: #555;
+      margin: 0 0 0.5rem 0;
+    }
+    .offer-expiry {
+      font-size: 0.85rem;
+      color: #D84315;
+      font-weight: bold;
+    }
+
+    /* QR Scanner Overlay */
+    #qr-scanner-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
@@ -213,6 +268,14 @@
       </div>
     </div>
 
+    <!-- Limited-Time Offers -->
+    <div class="section" id="offers-section" style="display: none;">
+      <h2 class="section-title">🔥 Limited-Time Offers</h2>
+      <div id="offers-slider" style="overflow-x: auto; scroll-snap-type: x mandatory; display: flex; gap: 1rem; padding: 0.5rem 0;">
+        <!-- Offers will be inserted here -->
+      </div>
+    </div>
+
     <!-- Reviews Section -->
     <div class="section">
       <h2 class="section-title">⭐ Reviews</h2>
@@ -220,51 +283,301 @@
         <p>Loading reviews...</p>
       </div>
     </div>
-<!-- Loyalty Stamp Card -->
-<div class="section">
-  <h2 class="section-title">🎟️ Loyalty Stamps</h2>
-  <p>Earn a stamp each day you visit! Get 10 stamps to redeem a reward.</p>
-  
-  <div style="text-align: center; margin: 1.5rem 0;">
-    <div id="stamp-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; max-width: 300px; margin: 0 auto;">
-      <!-- Stamps will appear here -->
+
+    <!-- Loyalty Stamp Card -->
+    <div class="section">
+      <h2 class="section-title">🎟️ Loyalty Stamps</h2>
+      <p>Earn a stamp each day you visit! Get 10 stamps to redeem a reward.</p>
+      
+      <div style="text-align: center; margin: 1.5rem 0;">
+        <button id="scan-btn" style="background: #4299E1; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">
+          📷 Scan QR Code to Earn Stamp
+        </button>
+      </div>
+
+      <div style="text-align: center; margin: 1.5rem 0;">
+        <div id="stamp-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; max-width: 300px; margin: 0 auto;">
+          <!-- Stamps will appear here -->
+        </div>
+      </div>
+
+      <div id="stamp-status" style="text-align: center; margin: 1rem 0; min-height: 24px; color: #777;">
+        <!-- Status message -->
+      </div>
+
+      <button id="redeem-btn">
+        🎉 Redeem Your Reward!
+      </button>
+
+      <div id="qr-instructions" style="margin-top: 1.5rem; padding: 1rem; background: #f0f9ff; border-radius: 8px; display: none;">
+        <p><strong>Stall Owner:</strong> Display this QR code at your counter!</p>
+        <div id="qr-placeholder" style="background: white; padding: 12px; border-radius: 8px; display: inline-block; margin-top: 8px;">
+          <img id="qr-code-img" src="" alt="QR Code" style="max-width: 150px; display: none;" />
+          <p id="qr-loading">Generating QR code...</p>
+        </div>
+        <p style="font-size: 0.85rem; margin-top: 8px; color: #555;">
+          Customers scan this to earn stamps.
+        </p>
+      </div>
     </div>
-  </div>
 
-  <div id="stamp-status" style="text-align: center; margin: 1rem 0; min-height: 24px; color: #777;">
-    <!-- Status message -->
-  </div>
-
-  <button id="redeem-btn" style="display: none; width: 100%; padding: 14px; background: #48BB78; color: white; border: none; border-radius: 8px; font-weight: 600; margin-top: 1rem;">
-    🎉 Redeem Your Reward!
-  </button>
-
-  <div id="qr-instructions" style="margin-top: 1.5rem; padding: 1rem; background: #f0f9ff; border-radius: 8px; display: none;">
-    <p><strong>Stall Owner:</strong> Display this QR code at your counter!</p>
-    <div id="qr-placeholder" style="background: white; padding: 12px; border-radius: 8px; display: inline-block; margin-top: 8px;">
-      <img id="qr-code-img" src="" alt="QR Code" style="max-width: 150px; display: none;" />
-      <p id="qr-loading">Generating QR code...</p>
-    </div>
-    <p style="font-size: 0.85rem; margin-top: 8px; color: #555;">
-      Customers scan this to earn stamps.
-    </p>
-  </div>
-</div>
     <a href="index.html" class="back-home">← Back to Home</a>
+  </div>
+
+  <div id="qr-scanner-overlay">
+    <div style="width: 90%; max-width: 400px; background: white; border-radius: 16px; overflow: hidden;">
+      <div id="qr-video-container" style="width: 100%; height: 300px; position: relative;">
+        <!-- Video will be inserted here -->
+      </div>
+      <div style="padding: 1rem; text-align: center;">
+        <p>Point your camera at the stall's QR code</p>
+        <button id="close-scan-btn" style="margin-top: 1rem; background: #E53E3E; color: white; border: none; padding: 8px 16px; border-radius: 6px;">
+          Cancel
+        </button>
+      </div>
+    </div>
   </div>
 
   <script src="data.js"></script>
   <script>
-    // 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby1na25Wopg0jlqbV1M0JQGGWWiF2NijobmHROEWEXdrUTIdfIGWfdgbB6uqut4CDQftg/exec';
-
-    // Get stall name from URL parameter
+    // =============== HELPER FUNCTIONS ===============
     function getStallNameFromURL() {
       const params = new URLSearchParams(window.location.search);
       return params.get('name');
     }
 
-    // Get all reviews for this stall
+    function getCurrentDate() {
+      const now = new Date();
+      return now.toISOString().split('T')[0]; // YYYY-MM-DD
+    }
+
+    function getStallKey(stallName) {
+      return `stamps_${btoa(stallName)}`;
+    }
+
+    // =============== LIMITED-TIME OFFERS ===============
+    function loadOffers(stallName) {
+      const offers = {
+        "Tian Tian Hainanese Chicken Rice": [
+          {
+            title: "Free Soup!",
+            description: "Get a free bowl of herbal soup with any chicken rice order.",
+            expiry: "2025-06-30"
+          },
+          {
+            title: "Lunch Combo",
+            description: "Chicken rice + drink for just $7 (Mon-Fri, 11am-2pm)",
+            expiry: "2025-07-15"
+          }
+        ],
+        "Lian He Fishball Noodles": [
+          {
+            title: "Extra Fishballs",
+            description: "Buy 1 bowl, get 2 extra fishballs free!",
+            expiry: "2025-06-25"
+          }
+        ]
+      };
+
+      const offerSection = document.getElementById('offers-section');
+      const slider = document.getElementById('offers-slider');
+
+      if (offers[stallName] && offers[stallName].length > 0) {
+        offerSection.style.display = 'block';
+        slider.innerHTML = '';
+
+        offers[stallName].forEach(offer => {
+          const card = document.createElement('div');
+          card.className = 'offer-card';
+          
+          const isExpired = new Date(offer.expiry) < new Date();
+          const expiryText = isExpired ? 'EXPIRED' : `Valid until ${offer.expiry}`;
+
+          card.innerHTML = `
+            <div class="offer-title">${offer.title} ${isExpired ? '❌' : '✅'}</div>
+            <div class="offer-desc">${offer.description}</div>
+            <div class="offer-expiry">${expiryText}</div>
+          `;
+          
+          if (isExpired) {
+            card.style.opacity = '0.6';
+            card.style.borderStyle = 'dotted';
+          }
+
+          slider.appendChild(card);
+        });
+      }
+    }
+
+    // =============== LOYALTY STAMP SYSTEM ===============
+    function canAddNewStamp(stampDates) {
+      if (stampDates.length === 0) return true;
+      const lastStamp = stampDates[stampDates.length - 1];
+      const today = getCurrentDate();
+      return lastStamp !== today;
+    }
+
+    function addStamp(stallName) {
+      const key = getStallKey(stallName);
+      const today = getCurrentDate();
+      
+      let stamps = JSON.parse(localStorage.getItem(key) || '[]');
+      
+      if (stamps.length >= 10) return;
+      
+      if (canAddNewStamp(stamps)) {
+        stamps.push(today);
+        localStorage.setItem(key, JSON.stringify(stamps));
+        renderStamps(stallName);
+      }
+    }
+
+    function renderStamps(stallName) {
+      const key = getStallKey(stallName);
+      const stamps = JSON.parse(localStorage.getItem(key) || '[]');
+      const grid = document.getElementById('stamp-grid');
+      const status = document.getElementById('stamp-status');
+      const redeemBtn = document.getElementById('redeem-btn');
+
+      grid.innerHTML = '';
+
+      for (let i = 0; i < 10; i++) {
+        const stamp = document.createElement('div');
+        stamp.className = 'stamp';
+        if (i < stamps.length) {
+          stamp.classList.add('filled');
+          const date = new Date(stamps[i]);
+          const label = `${date.getFullYear().toString().slice(-2)}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          stamp.textContent = label;
+        } else {
+          stamp.textContent = i + 1;
+        }
+        grid.appendChild(stamp);
+      }
+
+      if (stamps.length === 0) {
+        status.textContent = 'No stamps yet. Visit today to get your first!';
+      } else if (stamps.length < 10) {
+        const next = 10 - stamps.length;
+        status.textContent = `You have ${stamps.length} stamp${stamps.length !== 1 ? 's' : ''}. ${next} more to go!`;
+      } else {
+        status.textContent = '🎉 Congratulations! You’ve earned 10 stamps!';
+        redeemBtn.style.display = 'block';
+      }
+    }
+
+    document.getElementById('redeem-btn')?.addEventListener('click', function() {
+      alert('🎉 Show this screen to the stall owner to claim your reward!');
+    });
+
+    // =============== QR SCANNER ===============
+    let qrScanner = null;
+
+    function startQRScanner() {
+      const videoContainer = document.getElementById('qr-video-container');
+      const overlay = document.getElementById('qr-scanner-overlay');
+      
+      overlay.style.display = 'flex';
+      
+      if (qrScanner) {
+        qrScanner.destroy();
+      }
+
+      const video = document.createElement('video');
+      video.style.width = '100%';
+      video.style.height = '100%';
+      video.style.objectFit = 'cover';
+      videoContainer.innerHTML = '';
+      videoContainer.appendChild(video);
+
+      qrScanner = new QrScanner(video, (result) => {
+        handleScannedQR(result);
+      }, {
+        onDecodeError: () => {},
+        highlightScanRegion: true,
+        highlightCodeOutline: true
+      });
+
+      qrScanner.start();
+    }
+
+    function handleScannedQR(qrData) {
+      try {
+        const url = new URL(qrData);
+        const scannedStall = url.searchParams.get('name');
+        const isStampRequest = url.searchParams.get('stamp') === '1';
+        
+        if (!isStampRequest || !scannedStall) {
+          showAlert('❌ Invalid QR code. Please scan the stall’s loyalty QR.');
+          return;
+        }
+
+        const currentStall = decodeURIComponent(getStallNameFromURL() || '');
+        const decodedScannedStall = decodeURIComponent(scannedStall);
+
+        if (currentStall.toLowerCase() !== decodedScannedStall.toLowerCase()) {
+          showAlert(`❌ Wrong stall! This QR is for "${decodedScannedStall}".\nYou are viewing "${currentStall}".`);
+          return;
+        }
+
+        const key = getStallKey(currentStall);
+        const stamps = JSON.parse(localStorage.getItem(key) || '[]');
+        const today = getCurrentDate();
+        
+        if (stamps.includes(today)) {
+          showAlert('✅ You’ve already earned a stamp today!\nCome back tomorrow for another.');
+        } else {
+          stamps.push(today);
+          localStorage.setItem(key, JSON.stringify(stamps));
+          renderStamps(currentStall);
+          showAlert('🎉 Stamp collected! Thank you for visiting!');
+        }
+
+      } catch (e) {
+        showAlert('❌ Could not read QR code. Please try again.');
+      } finally {
+        stopQRScanner();
+      }
+    }
+
+    function stopQRScanner() {
+      if (qrScanner) {
+        qrScanner.stop();
+        qrScanner.destroy();
+        qrScanner = null;
+      }
+      document.getElementById('qr-scanner-overlay').style.display = 'none';
+    }
+
+    function showAlert(message) {
+      const alertDiv = document.createElement('div');
+      alertDiv.style.cssText = `
+        position: fixed; 
+        bottom: 20px; 
+        left: 50%; 
+        transform: translateX(-50%); 
+        background: white; 
+        color: #333; 
+        padding: 16px 24px; 
+        border-radius: 12px; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 2000;
+        max-width: 90%;
+        text-align: center;
+        font-weight: 500;
+      `;
+      alertDiv.textContent = message;
+      document.body.appendChild(alertDiv);
+      
+      setTimeout(() => {
+        document.body.removeChild(alertDiv);
+      }, 3000);
+    }
+
+    // =============== GOOGLE APPS SCRIPT INTEGRATION ===============
+    // 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycby1na25Wopg0jlqbV1M0JQGGWWiF2NijobmHROEWEXdrUTIdfIGWfdgbB6uqut4CDQftg/exec';
+
     async function loadStallData() {
       const stallName = getStallNameFromURL();
       if (!stallName) {
@@ -273,7 +586,6 @@
       }
 
       try {
-        // First, try to find stall in our data.js
         let stallData = null;
         if (window.stallDatabase) {
           stallData = window.stallDatabase.find(s => 
@@ -281,13 +593,15 @@
           );
         }
 
-        // Update header with known data first
         document.querySelector('.stall-name').textContent = stallName;
         if (stallData && stallData.centre) {
           document.getElementById('hawker-centre').textContent = stallData.centre;
         }
 
-        // Load reviews from Google Apps Script
+        // Load offers
+        loadOffers(stallName);
+
+        // Load reviews
         const response = await fetch(`${scriptURL}?stall=${encodeURIComponent(stallName)}`, {
           method: 'GET',
           mode: 'cors'
@@ -297,7 +611,6 @@
 
         const data = await response.json();
 
-        // If stall not found in reviews, still show basic info
         if (!data.stallInfo && stallData) {
           document.getElementById('avg-rating').textContent = '0.0';
           document.getElementById('total-reviews').textContent = '(0 reviews)';
@@ -309,7 +622,7 @@
           document.getElementById('queue-trend').textContent = `🕒 Usually ${data.stallInfo.mostCommonQueue}`;
         }
 
-        // Populate About section
+        // About
         const aboutText = document.getElementById('about-text');
         if (stallData && stallData.about) {
           aboutText.textContent = stallData.about;
@@ -317,7 +630,7 @@
           aboutText.textContent = "No description available yet. Know something about this stall? Let us know!";
         }
 
-        // Populate Photo Gallery
+        // Gallery
         const galleryDiv = document.getElementById('photo-gallery');
         if (stallData && stallData.photos && stallData.photos.length > 0) {
           galleryDiv.innerHTML = '';
@@ -332,7 +645,7 @@
           galleryDiv.innerHTML = '<p>No photos available yet.</p>';
         }
 
-        // Populate Menu
+        // Menu
         const menuDiv = document.getElementById('menu-items');
         if (stallData && stallData.menu && stallData.menu.length > 0) {
           menuDiv.innerHTML = '';
@@ -349,7 +662,7 @@
           menuDiv.innerHTML = '<p>Menu not available yet.</p>';
         }
 
-        // Render reviews
+        // Reviews
         const reviewsContainer = document.getElementById('reviews-container');
         if (data.reviews && data.reviews.length > 0) {
           reviewsContainer.innerHTML = '';
@@ -390,6 +703,9 @@
           reviewsContainer.innerHTML = '<p>No reviews yet. Be the first to submit one!</p>';
         }
 
+        // Render stamps
+        renderStamps(stallName);
+
       } catch (error) {
         console.error('Error loading stall data:', error);
         document.getElementById('stall-header').innerHTML = '<h2>Error Loading Stall</h2>';
@@ -397,128 +713,36 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', loadStallData);
-	// =============== LOYALTY STAMP SYSTEM ===============
-function getStallKey(stallName) {
-  return `stamps_${btoa(stallName)}`; // Encode to avoid special chars
-}
+    // =============== EVENT LISTENERS ===============
+    document.addEventListener('DOMContentLoaded', function() {
+      loadStallData();
 
-function getCurrentDate() {
-  const now = new Date();
-  return now.toISOString().split('T')[0]; // YYYY-MM-DD
-}
+      // QR Scan buttons
+      document.getElementById('scan-btn')?.addEventListener('click', startQRScanner);
+      document.getElementById('close-scan-btn')?.addEventListener('click', stopQRScanner);
 
-function canAddNewStamp(stampDates) {
-  if (stampDates.length === 0) return true;
-  const lastStamp = stampDates[stampDates.length - 1];
-  const today = getCurrentDate();
-  return lastStamp !== today; // Only one stamp per day
-}
+      // Show QR code for stall owners
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('stamp') === '1') {
+        document.getElementById('qr-instructions').style.display = 'block';
+        const stallName = decodeURIComponent(urlParams.get('name') || '');
+        if (stallName) {
+          const url = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(stallName)}&stamp=1`;
+          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+          document.getElementById('qr-code-img').src = qrUrl;
+          document.getElementById('qr-code-img').style.display = 'block';
+          document.getElementById('qr-loading').style.display = 'none';
+        }
+      }
 
-function addStamp(stallName) {
-  const key = getStallKey(stallName);
-  const today = getCurrentDate();
-  
-  let stamps = JSON.parse(localStorage.getItem(key) || '[]');
-  
-  if (stamps.length >= 10) {
-    return; // Already completed
-  }
-  
-  if (canAddNewStamp(stamps)) {
-    stamps.push(today);
-    localStorage.setItem(key, JSON.stringify(stamps));
-    renderStamps(stallName);
-  }
-}
-
-function renderStamps(stallName) {
-  const key = getStallKey(stallName);
-  const stamps = JSON.parse(localStorage.getItem(key) || '[]');
-  const grid = document.getElementById('stamp-grid');
-  const status = document.getElementById('stamp-status');
-  const redeemBtn = document.getElementById('redeem-btn');
-
-  // Clear grid
-  grid.innerHTML = '';
-
-  // Render 10 stamps
-  for (let i = 0; i < 10; i++) {
-    const stamp = document.createElement('div');
-    stamp.className = 'stamp';
-    if (i < stamps.length) {
-      stamp.classList.add('filled');
-      // Show last 2 digits of year + month (e.g., 25-04)
-      const date = new Date(stamps[i]);
-      const label = `${date.getFullYear().toString().slice(-2)}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      stamp.textContent = label;
-    } else {
-      stamp.textContent = i + 1;
-    }
-    grid.appendChild(stamp);
-  }
-
-  // Update status
-  if (stamps.length === 0) {
-    status.textContent = 'No stamps yet. Visit today to get your first!';
-  } else if (stamps.length < 10) {
-    const next = 10 - stamps.length;
-    status.textContent = `You have ${stamps.length} stamp${stamps.length !== 1 ? 's' : ''}. ${next} more to go!`;
-  } else {
-    status.textContent = '🎉 Congratulations! You’ve earned 10 stamps!';
-    redeemBtn.style.display = 'block';
-  }
-}
-
-// Handle redeem button
-document.getElementById('redeem-btn')?.addEventListener('click', function() {
-  alert('🎉 Show this screen to the stall owner to claim your reward!');
-  // Optional: Add confetti, sound, or reset after redemption
-});
-
-// =============== QR CODE GENERATION (for stall owners) ===============
-async function generateQRCode(stallName) {
-  const qrContainer = document.getElementById('qr-placeholder');
-  const qrImg = document.getElementById('qr-code-img');
-  const qrLoading = document.getElementById('qr-loading');
-
-  try {
-    // Use a free QR API
-    const url = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(stallName)}&stamp=1`;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
-    
-    qrImg.src = qrUrl;
-    qrImg.style.display = 'block';
-    qrLoading.style.display = 'none';
-  } catch (error) {
-    qrLoading.textContent = 'Failed to generate QR code.';
-    console.error('QR Error:', error);
-  }
-}
-
-// Show QR code section only if URL has ?stamp=1 (stall owner view)
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('stamp') === '1') {
-  document.getElementById('qr-instructions').style.display = 'block';
-  const stallName = decodeURIComponent(urlParams.get('name') || '');
-  if (stallName) {
-    generateQRCode(stallName);
-  }
-}
-
-// Auto-add stamp if URL has ?stamp=1
-if (urlParams.get('stamp') === '1') {
-  const stallName = decodeURIComponent(urlParams.get('name') || '');
-  if (stallName) {
-    addStamp(stallName);
-  }
-}
-
-// Initial render
-const currentStall = getStallNameFromURL();
-if (currentStall) {
-  renderStamps(decodeURIComponent(currentStall));
-}
+      // Auto-add stamp if URL has ?stamp=1
+      if (urlParams.get('stamp') === '1') {
+        const stallName = decodeURIComponent(urlParams.get('name') || '');
+        if (stallName) {
+          addStamp(stallName);
+        }
+      }
+    });
   </script>
 </body>
 </html>
