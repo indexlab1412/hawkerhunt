@@ -2,15 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<!-- Required for camera on Android -->
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Stall Detail - HawkerHunt SG</title>
-  <script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.css">
+  <!-- Use html5-qrcode (better Android support) -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -223,7 +220,7 @@
       font-weight: bold;
     }
 
-    /* QR Scanner Overlay */
+    /* QR Scanner Overlay - FIXED COLORS */
     #qr-scanner-overlay {
       display: none;
       position: fixed;
@@ -236,6 +233,49 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      color: white; /* Ensure text is readable */
+    }
+    #qr-video-container {
+      width: 95%;
+      max-width: 400px;
+      height: 300px;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    #qr-instructions-box {
+      background: white;
+      color: #333;
+      padding: 1.2rem;
+      border-radius: 16px;
+      margin-top: 20px;
+      width: 95%;
+      max-width: 400px;
+    }
+    #qr-instructions-box h3 {
+      margin: 0 0 10px 0;
+      color: #E53E3E;
+    }
+    #qr-instructions-box ul {
+      padding-left: 20px;
+      margin: 10px 0;
+    }
+    #qr-instructions-box li {
+      margin: 6px 0;
+    }
+    .qr-btn {
+      background: #4299E1;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 15px;
+      cursor: pointer;
+    }
+    .qr-btn.danger {
+      background: #E53E3E;
     }
   </style>
 </head>
@@ -294,12 +334,13 @@
       <h2 class="section-title">🎟️ Loyalty Stamps</h2>
       <p>Earn a stamp each day you visit! Get 10 stamps to redeem a reward.</p>
       
-<button id="scan-btn" style="background: #4299E1; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; position: relative;">
-  📷 Scan QR Code to Earn Stamp
-  <span id="ios-warning" style="display: none; position: absolute; top: -28px; left: 50%; transform: translateX(-50%); background: #FFD700; color: #333; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; white-space: nowrap;">
-    iPhone? Use Safari!
-  </span>
-</button>
+      <div style="text-align: center; margin: 1.5rem 0;">
+        <button id="scan-btn" class="qr-btn">
+          📷 Scan QR Code to Earn Stamp
+        </button>
+        <p style="font-size: 0.85rem; color: #666; margin-top: 8px;">
+          <strong>Android users:</strong> Tap "Allow" when prompted for camera access.
+        </p>
       </div>
 
       <div style="text-align: center; margin: 1.5rem 0;">
@@ -331,30 +372,26 @@
     <a href="index.html" class="back-home">← Back to Home</a>
   </div>
 
+  <!-- QR Scanner Overlay -->
   <div id="qr-scanner-overlay">
-    <div style="width: 90%; max-width: 400px; background: white; border-radius: 16px; overflow: hidden;">
-      <div id="qr-video-container" style="width: 100%; height: 300px; position: relative;">
-        <!-- Video will be inserted here -->
-      </div>
-      <div style="padding: 1rem; text-align: center;">
-        <p>Point your camera at the stall's QR code</p>
-        <button id="close-scan-btn" style="margin-top: 1rem; background: #E53E3E; color: white; border: none; padding: 8px 16px; border-radius: 6px;">
-          Cancel
-        </button>
-      </div>
+    <div id="qr-video-container">
+      <!-- Camera video will appear here -->
+    </div>
+    <div id="qr-instructions-box">
+      <h3>📸 Point your camera at the QR code</h3>
+      <p>If you don't see the camera:</p>
+      <ul>
+        <li>Tap the <strong>lock icon 🔒</strong> in Chrome's address bar</li>
+        <li>Set <strong>Camera</strong> to <strong>Allow</strong></li>
+        <li>Refresh the page and try again</li>
+      </ul>
+      <button id="close-scan-btn" class="qr-btn danger">Cancel</button>
     </div>
   </div>
 
   <script src="data.js"></script>
   <script>
-  // Redirect to HTTPS if needed (GitHub Pages should already be HTTPS)
-if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-  location.replace(`https:${location.href.substring(location.protocol.length)}`);
-}
     // =============== HELPER FUNCTIONS ===============
-	function isIOS() {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent);
-}
     function getStallNameFromURL() {
       const params = new URLSearchParams(window.location.search);
       return params.get('name');
@@ -362,7 +399,7 @@ if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
 
     function getCurrentDate() {
       const now = new Date();
-      return now.toISOString().split('T')[0]; // YYYY-MM-DD
+      return now.toISOString().split('T')[0];
     }
 
     function getStallKey(stallName) {
@@ -484,86 +521,83 @@ if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
       alert('🎉 Show this screen to the stall owner to claim your reward!');
     });
 
-    // =============== QR SCANNER ===============
-    let qrScanner = null;
+    // =============== NEW QR SCANNER (html5-qrcode) ===============
+    let html5QrCode = null;
 
-async function startQRScanner() {
-  const videoContainer = document.getElementById('qr-video-container');
-  const overlay = document.getElementById('qr-scanner-overlay');
-  
-  overlay.style.display = 'flex';
-  
-  if (qrScanner) {
-    qrScanner.destroy();
-  }
+    async function startQRScanner() {
+      const overlay = document.getElementById('qr-scanner-overlay');
+      overlay.style.display = 'flex';
 
-  const video = document.createElement('video');
-  video.style.width = '100%';
-  video.style.height = '100%';
-  video.style.objectFit = 'cover';
-  video.setAttribute('playsinline', 'true'); // Critical for iOS/Android
-  videoContainer.innerHTML = '';
-  videoContainer.appendChild(video);
+      const videoContainer = document.getElementById('qr-video-container');
+      videoContainer.innerHTML = ''; // Clear previous
 
-  try {
-    // First, check if camera is available
-    const hasCamera = await QrScanner.hasCamera();
-    if (!hasCamera) {
-      throw new Error('No camera found');
+      // Create new scanner
+      html5QrCode = new Html5Qrcode("qr-video-container");
+
+      try {
+        // Request camera with explicit config
+        const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+          handleScannedQR(decodedText);
+        };
+
+        const config = {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+          disableFlip: false,
+          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+        };
+
+        await html5QrCode.start(
+          { facingMode: "environment" }, // Use back camera
+          config,
+          qrCodeSuccessCallback,
+          (errorMessage) => {
+            // Optional: show error
+          }
+        );
+
+      } catch (err) {
+        console.error("QR Scanner error:", err);
+        showCameraError();
+      }
     }
 
-    qrScanner = new QrScanner(video, (result) => {
-      handleScannedQR(result);
-    }, {
-      onDecodeError: (error) => {
-        console.log('Decode error:', error);
-      },
-      highlightScanRegion: true,
-      highlightCodeOutline: true
-    });
-
-    // Start scanner
-    await qrScanner.start();
-
-  } catch (error) {
-    console.error('Camera access failed:', error);
-    
-    let message = 'Camera access denied or not available.';
-    
-    // Detect likely causes
-    if (location.protocol !== 'https:') {
-      message = 'Camera only works on HTTPS sites. Please open via https://';
-    } else if (navigator.mediaDevices === undefined) {
-      message = 'Your browser does not support camera access.';
-    } else if (error.name === 'NotAllowedError') {
-      message = 'Please allow camera access when prompted.';
-    } else if (error.name === 'NotFoundError') {
-      message = 'No camera found on this device.';
-    }
-
-    videoContainer.innerHTML = `
-      <div style="color: white; text-align: center; padding: 20px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
-        <div>❌ ${message}</div>
-        <div style="font-size: 0.9rem; margin-top: 15px;">
-          <strong>On Android:</strong><br>
-          1. Tap the 🔒 lock icon in the address bar<br>
-          2. Set Camera to "Allow"<br>
-          3. Refresh the page and try again
+    function showCameraError() {
+      const videoContainer = document.getElementById('qr-video-container');
+      videoContainer.innerHTML = `
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: white; text-align: center; padding: 20px;">
+          <div>❌ Camera access denied</div>
+          <div style="font-size: 0.9rem; margin-top: 15px;">
+            Please allow camera access in Chrome:
+          </div>
+          <ol style="font-size: 0.85rem; margin-top: 10px; text-align: left; padding-left: 20px;">
+            <li>Tap the <strong>lock icon 🔒</strong> in the address bar</li>
+            <li>Set <strong>Camera</strong> to <strong>Allow</strong></li>
+            <li>Refresh and try again</li>
+          </ol>
         </div>
-        <button id="retry-camera-btn" style="margin-top: 20px; background: #4299E1; color: white; border: none; padding: 10px 20px; border-radius: 8px;">
-          Retry
-        </button>
-      </div>
-    `;
-    
-    document.getElementById('retry-camera-btn')?.addEventListener('click', () => {
-      stopQRScanner();
-      startQRScanner();
-    });
-  }
-}
+      `;
+    }
+
+    function stopQRScanner() {
+      const overlay = document.getElementById('qr-scanner-overlay');
+      overlay.style.display = 'none';
+
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear();
+          html5QrCode = null;
+        }).catch(err => {
+          console.log("Stop error:", err);
+          html5QrCode = null;
+        });
+      }
+    }
 
     function handleScannedQR(qrData) {
+      stopQRScanner();
+      
       try {
         const url = new URL(qrData);
         const scannedStall = url.searchParams.get('name');
@@ -597,18 +631,7 @@ async function startQRScanner() {
 
       } catch (e) {
         showAlert('❌ Could not read QR code. Please try again.');
-      } finally {
-        stopQRScanner();
       }
-    }
-
-    function stopQRScanner() {
-      if (qrScanner) {
-        qrScanner.stop();
-        qrScanner.destroy();
-        qrScanner = null;
-      }
-      document.getElementById('qr-scanner-overlay').style.display = 'none';
     }
 
     function showAlert(message) {
@@ -660,10 +683,8 @@ async function startQRScanner() {
           document.getElementById('hawker-centre').textContent = stallData.centre;
         }
 
-        // Load offers
         loadOffers(stallName);
 
-        // Load reviews
         const response = await fetch(`${scriptURL}?stall=${encodeURIComponent(stallName)}`, {
           method: 'GET',
           mode: 'cors'
@@ -684,7 +705,6 @@ async function startQRScanner() {
           document.getElementById('queue-trend').textContent = `🕒 Usually ${data.stallInfo.mostCommonQueue}`;
         }
 
-        // About
         const aboutText = document.getElementById('about-text');
         if (stallData && stallData.about) {
           aboutText.textContent = stallData.about;
@@ -692,7 +712,6 @@ async function startQRScanner() {
           aboutText.textContent = "No description available yet. Know something about this stall? Let us know!";
         }
 
-        // Gallery
         const galleryDiv = document.getElementById('photo-gallery');
         if (stallData && stallData.photos && stallData.photos.length > 0) {
           galleryDiv.innerHTML = '';
@@ -707,7 +726,6 @@ async function startQRScanner() {
           galleryDiv.innerHTML = '<p>No photos available yet.</p>';
         }
 
-        // Menu
         const menuDiv = document.getElementById('menu-items');
         if (stallData && stallData.menu && stallData.menu.length > 0) {
           menuDiv.innerHTML = '';
@@ -724,7 +742,6 @@ async function startQRScanner() {
           menuDiv.innerHTML = '<p>Menu not available yet.</p>';
         }
 
-        // Reviews
         const reviewsContainer = document.getElementById('reviews-container');
         if (data.reviews && data.reviews.length > 0) {
           reviewsContainer.innerHTML = '';
@@ -765,7 +782,6 @@ async function startQRScanner() {
           reviewsContainer.innerHTML = '<p>No reviews yet. Be the first to submit one!</p>';
         }
 
-        // Render stamps
         renderStamps(stallName);
 
       } catch (error) {
@@ -775,20 +791,15 @@ async function startQRScanner() {
       }
     }
 
-    // =============== EVENT LISTENERS ===============
+    // =============== INIT ===============
     document.addEventListener('DOMContentLoaded', function() {
       loadStallData();
-	  
-	  // Show iOS warning
-if (isIOS()) {
-  document.getElementById('ios-warning').style.display = 'block';
-}
 
       // QR Scan buttons
       document.getElementById('scan-btn')?.addEventListener('click', startQRScanner);
       document.getElementById('close-scan-btn')?.addEventListener('click', stopQRScanner);
 
-      // Show QR code for stall owners
+      // Show QR for stall owners
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('stamp') === '1') {
         document.getElementById('qr-instructions').style.display = 'block';
@@ -802,7 +813,6 @@ if (isIOS()) {
         }
       }
 
-      // Auto-add stamp if URL has ?stamp=1
       if (urlParams.get('stamp') === '1') {
         const stallName = decodeURIComponent(urlParams.get('name') || '');
         if (stallName) {
