@@ -54,7 +54,7 @@ window.stallDatabase = [
       { name: "Fishball Noodles (Soup)", price: 4.50 },
       { name: "Extra Fishballs (4 pcs)", price: 2.00 }
     ]
-	loyaltyRedeemAt: 5   // ← Special: redeem at 5!
+	loyaltyRedeemAt: 5
   },
   {
     name: "Tian Tian Hainanese Chicken Rice",
@@ -70,7 +70,7 @@ window.stallDatabase = [
       { name: "Chicken Rice (Large)", price: 8.00 },
       { name: "Soy Sauce Chicken", price: 7.00 }
     ]
-	loyaltyRedeemAt: 5  // ← Default: 5 stamps
+	loyaltyRedeemAt: 5
   },
   {
     name: "Nam Sing Hokkien Fried Mee",
@@ -84,7 +84,7 @@ window.stallDatabase = [
       { name: "Hokkien Mee (Regular)", price: 6.00 },
       { name: "Hokkien Mee (Seafood)", price: 8.00 }
     ]
-	loyaltyRedeemAt: 5   // ← Special: redeem at 5!
+	loyaltyRedeemAt: 5
   },
   {
     name: "Tekka Centre Mutton Soup",
@@ -99,7 +99,7 @@ window.stallDatabase = [
       { name: "Mutton Soup (Large)", price: 7.50 },
       { name: "Naan Bread", price: 1.50 }
     ]
-	loyaltyRedeemAt: 5   // ← Special: redeem at 5!
+	loyaltyRedeemAt: 5
   },
   {
     name: "Lau Pa Sat Satay Street",
@@ -115,8 +115,9 @@ window.stallDatabase = [
       { name: "Mutton Satay (per stick)", price: 1.00 },
       { name: "Peanut Sauce + Ketupat", price: 2.00 }
     ]
-	loyaltyRedeemAt: 5   // ← Special: redeem at 5!
+	loyaltyRedeemAt: 5
   }
 ];
+
 
 // You can add more stalls and centres here as your platform grows!
