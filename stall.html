@@ -377,16 +377,11 @@
     <div id="qr-video-container">
       <!-- Camera video will appear here -->
     </div>
-    <div id="qr-instructions-box">
-      <h3>📸 Point your camera at the QR code</h3>
-      <p>If you don't see the camera:</p>
-      <ul>
-        <li>Tap the <strong>lock icon 🔒</strong> in Chrome's address bar</li>
-        <li>Set <strong>Camera</strong> to <strong>Allow</strong></li>
-        <li>Refresh the page and try again</li>
-      </ul>
-      <button id="close-scan-btn" class="qr-btn danger">Cancel</button>
-    </div>
+    <div id="qr-instructions-box" style="background: white; color: #333; padding: 1rem; border-radius: 12px; margin-top: 12px; width: 95%; max-width: 400px; font-size: 0.85rem;">
+  <p>📸 Point camera at QR code</p>
+  <p style="margin: 8px 0; color: #E53E3E;">No camera? Tap 🔒 in address bar → Allow Camera</p>
+  <button id="close-scan-btn" class="qr-btn danger" style="padding: 8px 16px; font-size: 0.9rem;">Cancel</button>
+</div>
   </div>
 
   <script src="data.js"></script>
@@ -399,6 +394,7 @@
 
     function getCurrentDate() {
       const now = new Date();
+	  console.log("Adding stamp for date:", today); // ← Check browser console
       return now.toISOString().split('T')[0];
     }
 
@@ -474,7 +470,19 @@
       
       let stamps = JSON.parse(localStorage.getItem(key) || '[]');
       
-      if (stamps.length >= 10) return;
+      // Get redemption threshold from stall data
+	let redeemAt = 10;
+	if (window.stallDatabase) {
+	const currentStall = decodeURIComponent(getStallNameFromURL() || '');
+	const stallData = window.stallDatabase.find(s => 
+    s.name.toLowerCase() === currentStall.toLowerCase()
+	);
+	if (stallData && stallData.loyaltyRedeemAt) {
+    redeemAt = stallData.loyaltyRedeemAt;
+	}
+	}
+
+if (stamps.length >= redeemAt) return;
       
       if (canAddNewStamp(stamps)) {
         stamps.push(today);
@@ -506,15 +514,27 @@
         grid.appendChild(stamp);
       }
 
-      if (stamps.length === 0) {
-        status.textContent = 'No stamps yet. Visit today to get your first!';
-      } else if (stamps.length < 10) {
-        const next = 10 - stamps.length;
-        status.textContent = `You have ${stamps.length} stamp${stamps.length !== 1 ? 's' : ''}. ${next} more to go!`;
-      } else {
-        status.textContent = '🎉 Congratulations! You’ve earned 10 stamps!';
-        redeemBtn.style.display = 'block';
-      }
+      // Get redemption threshold
+let redeemAt = 10;
+const currentStallName = decodeURIComponent(getStallNameFromURL() || '');
+if (window.stallDatabase) {
+  const stallData = window.stallDatabase.find(s => 
+    s.name.toLowerCase() === currentStallName.toLowerCase()
+  );
+  if (stallData && stallData.loyaltyRedeemAt) {
+    redeemAt = stallData.loyaltyRedeemAt;
+  }
+}
+
+if (stamps.length === 0) {
+  status.textContent = 'No stamps yet. Visit today to get your first!';
+} else if (stamps.length < redeemAt) {
+  const next = redeemAt - stamps.length;
+  status.textContent = `You have ${stamps.length} stamp${stamps.length !== 1 ? 's' : ''}. ${next} more to go!`;
+} else {
+  status.textContent = `🎉 Congratulations! You’ve earned ${redeemAt} stamps!`;
+  redeemBtn.style.display = 'block';
+}
     }
 
     document.getElementById('redeem-btn')?.addEventListener('click', function() {
@@ -542,7 +562,7 @@
 
         const config = {
           fps: 10,
-          qrbox: { width: 250, height: 250 },
+          qrbox: { width: 280, height: 280 }, // ← Larger scan area
           aspectRatio: 1.0,
           disableFlip: false,
           supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
