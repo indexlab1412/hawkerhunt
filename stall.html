@@ -516,7 +516,8 @@
           stamp.classList.add('filled');
           const date = new Date(stamps[i]);
           // Display: YY-MM (e.g., 24-09)
-          const label = `${date.getFullYear().toString().slice(-2)}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          // const label = `${date.getFullYear().toString().slice(-2)}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          const label = `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}`;
           stamp.textContent = label;
           // Tooltip: Full date (e.g., 27 Sep 2024)
           stamp.title = date.toLocaleDateString('en-SG', {
@@ -856,3 +857,4 @@
 </body>
 
 </html>
+
