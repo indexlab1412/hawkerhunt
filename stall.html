@@ -392,11 +392,12 @@
       return params.get('name');
     }
 
-    function getCurrentDate() {
-      const now = new Date();
-	  console.log("Adding stamp for date:", today); // ← Check browser console
-      return now.toISOString().split('T')[0];
-    }
+function getCurrentDate() {
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  // console.log("Current date for stamp:", dateStr); // ✅ Safe to log
+  return dateStr;
+}
 
     function getStallKey(stallName) {
       return `stamps_${btoa(stallName)}`;
@@ -616,7 +617,25 @@ if (stamps.length === 0) {
     }
 
     function handleScannedQR(qrData) {
+	  console.log("Raw QR data:", qrData); // ← Add this
       stopQRScanner();
+	  
+	  function handleScannedQR(qrData) {
+  stopQRScanner();
+  
+  // Validate: must be a URL with ?name= and &stamp=1
+  if (!qrData || !qrData.includes('?name=') || !qrData.includes('&stamp=1')) {
+    showAlert('❌ Invalid QR code. Please scan the official stall QR.');
+    return;
+  }
+
+  try {
+    const url = new URL(qrData.startsWith('http') ? qrData : 'https://' + qrData);
+    // ... rest of logic
+  } catch (e) {
+    showAlert('❌ Invalid URL in QR code.');
+  }
+}
       
       try {
         const url = new URL(qrData);
@@ -826,7 +845,8 @@ if (stamps.length === 0) {
         const stallName = decodeURIComponent(urlParams.get('name') || '');
         if (stallName) {
           const url = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(stallName)}&stamp=1`;
-          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+		  console.log("QR URL:", url);
+          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}&qzone=1`;
           document.getElementById('qr-code-img').src = qrUrl;
           document.getElementById('qr-code-img').style.display = 'block';
           document.getElementById('qr-loading').style.display = 'none';
