@@ -6,7 +6,6 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Stall Detail - HawkerHunt SG</title>
-  <!-- Use html5-qrcode (better Android support) -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     body {
@@ -170,6 +169,7 @@
       color: #aaa;
       background: white;
       transition: all 0.3s;
+      cursor: help; /* Shows ? cursor for tooltip */
     }
     .stamp.filled {
       border: 2px solid #F6AD55;
@@ -220,7 +220,7 @@
       font-weight: bold;
     }
 
-    /* QR Scanner Overlay - FIXED COLORS */
+    /* QR Scanner Overlay */
     #qr-scanner-overlay {
       display: none;
       position: fixed;
@@ -233,46 +233,45 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: white; /* Ensure text is readable */
+      color: white;
     }
     #qr-video-container {
       width: 95%;
       max-width: 400px;
-      height: 300px;
+      height: 350px; /* Taller for iPhone */
       background: #000;
       border-radius: 12px;
       overflow: hidden;
       position: relative;
     }
+    #qr-video-container video {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+    }
     #qr-instructions-box {
       background: white;
       color: #333;
-      padding: 1.2rem;
-      border-radius: 16px;
-      margin-top: 20px;
+      padding: 1rem;
+      border-radius: 12px;
+      margin-top: 12px;
       width: 95%;
       max-width: 400px;
+      font-size: 0.85rem;
     }
-    #qr-instructions-box h3 {
-      margin: 0 0 10px 0;
-      color: #E53E3E;
-    }
-    #qr-instructions-box ul {
-      padding-left: 20px;
-      margin: 10px 0;
-    }
-    #qr-instructions-box li {
+    #qr-instructions-box p {
       margin: 6px 0;
     }
     .qr-btn {
       background: #4299E1;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 8px 16px;
       border-radius: 8px;
       font-weight: 600;
-      margin-top: 15px;
+      margin-top: 10px;
       cursor: pointer;
+      font-size: 0.9rem;
     }
     .qr-btn.danger {
       background: #E53E3E;
@@ -377,11 +376,11 @@
     <div id="qr-video-container">
       <!-- Camera video will appear here -->
     </div>
-    <div id="qr-instructions-box" style="background: white; color: #333; padding: 1rem; border-radius: 12px; margin-top: 12px; width: 95%; max-width: 400px; font-size: 0.85rem;">
-  <p>📸 Point camera at QR code</p>
-  <p style="margin: 8px 0; color: #E53E3E;">No camera? Tap 🔒 in address bar → Allow Camera</p>
-  <button id="close-scan-btn" class="qr-btn danger" style="padding: 8px 16px; font-size: 0.9rem;">Cancel</button>
-</div>
+    <div id="qr-instructions-box">
+      <p>📸 Point camera at QR code</p>
+      <p style="color: #E53E3E;">No camera? Tap 🔒 in address bar → Allow Camera</p>
+      <button id="close-scan-btn" class="qr-btn danger">Cancel</button>
+    </div>
   </div>
 
   <script src="data.js"></script>
@@ -392,12 +391,11 @@
       return params.get('name');
     }
 
-function getCurrentDate() {
-  const now = new Date();
-  const dateStr = now.toISOString().split('T')[0];
-  // console.log("Current date for stamp:", dateStr); // ✅ Safe to log
-  return dateStr;
-}
+    function getCurrentDate() {
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      return dateStr;
+    }
 
     function getStallKey(stallName) {
       return `stamps_${btoa(stallName)}`;
@@ -471,19 +469,18 @@ function getCurrentDate() {
       
       let stamps = JSON.parse(localStorage.getItem(key) || '[]');
       
-      // Get redemption threshold from stall data
-	let redeemAt = 10;
-	if (window.stallDatabase) {
-	const currentStall = decodeURIComponent(getStallNameFromURL() || '');
-	const stallData = window.stallDatabase.find(s => 
-    s.name.toLowerCase() === currentStall.toLowerCase()
-	);
-	if (stallData && stallData.loyaltyRedeemAt) {
-    redeemAt = stallData.loyaltyRedeemAt;
-	}
-	}
+      // Get redemption threshold
+      let redeemAt = 10;
+      if (window.stallDatabase) {
+        const stallData = window.stallDatabase.find(s => 
+          s.name.toLowerCase() === stallName.toLowerCase()
+        );
+        if (stallData && stallData.loyaltyRedeemAt) {
+          redeemAt = stallData.loyaltyRedeemAt;
+        }
+      }
 
-if (stamps.length >= redeemAt) return;
+      if (stamps.length >= redeemAt) return;
       
       if (canAddNewStamp(stamps)) {
         stamps.push(today);
@@ -499,6 +496,17 @@ if (stamps.length >= redeemAt) return;
       const status = document.getElementById('stamp-status');
       const redeemBtn = document.getElementById('redeem-btn');
 
+      // Get redemption threshold
+      let redeemAt = 10;
+      if (window.stallDatabase) {
+        const stallData = window.stallDatabase.find(s => 
+          s.name.toLowerCase() === stallName.toLowerCase()
+        );
+        if (stallData && stallData.loyaltyRedeemAt) {
+          redeemAt = stallData.loyaltyRedeemAt;
+        }
+      }
+
       grid.innerHTML = '';
 
       for (let i = 0; i < 10; i++) {
@@ -507,35 +515,31 @@ if (stamps.length >= redeemAt) return;
         if (i < stamps.length) {
           stamp.classList.add('filled');
           const date = new Date(stamps[i]);
+          // Display: YY-MM (e.g., 24-09)
           const label = `${date.getFullYear().toString().slice(-2)}-${String(date.getMonth() + 1).padStart(2, '0')}`;
           stamp.textContent = label;
+          // Tooltip: Full date (e.g., 27 Sep 2024)
+          stamp.title = date.toLocaleDateString('en-SG', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+          });
         } else {
           stamp.textContent = i + 1;
+          stamp.title = "No stamp yet";
         }
         grid.appendChild(stamp);
       }
 
-      // Get redemption threshold
-let redeemAt = 10;
-const currentStallName = decodeURIComponent(getStallNameFromURL() || '');
-if (window.stallDatabase) {
-  const stallData = window.stallDatabase.find(s => 
-    s.name.toLowerCase() === currentStallName.toLowerCase()
-  );
-  if (stallData && stallData.loyaltyRedeemAt) {
-    redeemAt = stallData.loyaltyRedeemAt;
-  }
-}
-
-if (stamps.length === 0) {
-  status.textContent = 'No stamps yet. Visit today to get your first!';
-} else if (stamps.length < redeemAt) {
-  const next = redeemAt - stamps.length;
-  status.textContent = `You have ${stamps.length} stamp${stamps.length !== 1 ? 's' : ''}. ${next} more to go!`;
-} else {
-  status.textContent = `🎉 Congratulations! You’ve earned ${redeemAt} stamps!`;
-  redeemBtn.style.display = 'block';
-}
+      if (stamps.length === 0) {
+        status.textContent = 'No stamps yet. Visit today to get your first!';
+      } else if (stamps.length < redeemAt) {
+        const next = redeemAt - stamps.length;
+        status.textContent = `You have ${stamps.length} stamp${stamps.length !== 1 ? 's' : ''}. ${next} more to go!`;
+      } else {
+        status.textContent = `🎉 Congratulations! You’ve earned ${redeemAt} stamps!`;
+        redeemBtn.style.display = 'block';
+      }
     }
 
     document.getElementById('redeem-btn')?.addEventListener('click', function() {
@@ -550,32 +554,28 @@ if (stamps.length === 0) {
       overlay.style.display = 'flex';
 
       const videoContainer = document.getElementById('qr-video-container');
-      videoContainer.innerHTML = ''; // Clear previous
+      videoContainer.innerHTML = '';
 
-      // Create new scanner
       html5QrCode = new Html5Qrcode("qr-video-container");
 
       try {
-        // Request camera with explicit config
         const qrCodeSuccessCallback = (decodedText, decodedResult) => {
           handleScannedQR(decodedText);
         };
 
         const config = {
           fps: 10,
-          qrbox: { width: 280, height: 280 }, // ← Larger scan area
+          qrbox: { width: 300, height: 300 }, // Larger for iPhone
           aspectRatio: 1.0,
           disableFlip: false,
           supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
         };
 
         await html5QrCode.start(
-          { facingMode: "environment" }, // Use back camera
+          { facingMode: "environment" },
           config,
           qrCodeSuccessCallback,
-          (errorMessage) => {
-            // Optional: show error
-          }
+          (errorMessage) => {}
         );
 
       } catch (err) {
@@ -617,28 +617,22 @@ if (stamps.length === 0) {
     }
 
     function handleScannedQR(qrData) {
-	  console.log("Raw QR data:", qrData); // ← Add this
       stopQRScanner();
-	  
-	  function handleScannedQR(qrData) {
-  stopQRScanner();
-  
-  // Validate: must be a URL with ?name= and &stamp=1
-  if (!qrData || !qrData.includes('?name=') || !qrData.includes('&stamp=1')) {
-    showAlert('❌ Invalid QR code. Please scan the official stall QR.');
-    return;
-  }
-
-  try {
-    const url = new URL(qrData.startsWith('http') ? qrData : 'https://' + qrData);
-    // ... rest of logic
-  } catch (e) {
-    showAlert('❌ Invalid URL in QR code.');
-  }
-}
       
       try {
-        const url = new URL(qrData);
+        // Handle QR data that may not start with http
+        let urlStr = qrData;
+        if (!qrData.startsWith('http')) {
+          // Try to construct full URL
+          const currentHost = window.location.origin;
+          if (qrData.startsWith('/')) {
+            urlStr = currentHost + qrData;
+          } else {
+            urlStr = currentHost + '/' + qrData;
+          }
+        }
+
+        const url = new URL(urlStr);
         const scannedStall = url.searchParams.get('name');
         const isStampRequest = url.searchParams.get('stamp') === '1';
         
@@ -669,6 +663,7 @@ if (stamps.length === 0) {
         }
 
       } catch (e) {
+        console.error("QR Parse Error:", e);
         showAlert('❌ Could not read QR code. Please try again.');
       }
     }
@@ -700,7 +695,7 @@ if (stamps.length === 0) {
 
     // =============== GOOGLE APPS SCRIPT INTEGRATION ===============
     // 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby1na25Wopg0jlqbV1M0JQGGWWiF2NijobmHROEWEXdrUTIdfIGWfdgbB6uqut4CDQftg/exec';
+    const scriptURL = 'https://script.google.com/macros/s/YOUR_WEB_APP_ID/exec';
 
     async function loadStallData() {
       const stallName = getStallNameFromURL();
@@ -834,19 +829,16 @@ if (stamps.length === 0) {
     document.addEventListener('DOMContentLoaded', function() {
       loadStallData();
 
-      // QR Scan buttons
       document.getElementById('scan-btn')?.addEventListener('click', startQRScanner);
       document.getElementById('close-scan-btn')?.addEventListener('click', stopQRScanner);
 
-      // Show QR for stall owners
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('stamp') === '1') {
         document.getElementById('qr-instructions').style.display = 'block';
         const stallName = decodeURIComponent(urlParams.get('name') || '');
         if (stallName) {
-          const url = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(stallName)}&stamp=1`;
-		  console.log("QR URL:", url);
-          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}&qzone=1`;
+          const fullUrl = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(stallName)}&stamp=1`;
+          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(fullUrl)}&qzone=1`;
           document.getElementById('qr-code-img').src = qrUrl;
           document.getElementById('qr-code-img').style.display = 'block';
           document.getElementById('qr-loading').style.display = 'none';
