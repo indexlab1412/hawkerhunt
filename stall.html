@@ -169,12 +169,10 @@
       color: #aaa;
       background: white;
       transition: all 0.3s;
-      cursor: help; /* Shows ? cursor for tooltip */
+      cursor: help;
     }
     .stamp.filled {
       border: 2px solid #F6AD55;
-      background: #fff8e6;
-      color: #F6AD55;
       font-weight: bold;
     }
     #redeem-btn {
@@ -238,7 +236,7 @@
     #qr-video-container {
       width: 95%;
       max-width: 400px;
-      height: 350px; /* Taller for iPhone */
+      height: 350px;
       background: #000;
       border-radius: 12px;
       overflow: hidden;
@@ -331,7 +329,7 @@
     <!-- Loyalty Stamp Card -->
     <div class="section">
       <h2 class="section-title">🎟️ Loyalty Stamps</h2>
-      <p>Earn a stamp each day you visit! Get 10 stamps to redeem a reward.</p>
+      <p>Earn stamps for daily visits! Redeem rewards at milestone stamps.</p>
       
       <div style="text-align: center; margin: 1.5rem 0;">
         <button id="scan-btn" class="qr-btn">
@@ -401,38 +399,20 @@
       return `stamps_${btoa(stallName)}`;
     }
 
-    // =============== LIMITED-TIME OFFERS ===============
+    // =============== LOAD OFFERS FROM DATA.JS ===============
     function loadOffers(stallName) {
-      const offers = {
-        "Tian Tian Hainanese Chicken Rice": [
-          {
-            title: "Free Soup!",
-            description: "Get a free bowl of herbal soup with any chicken rice order.",
-            expiry: "2025-06-30"
-          },
-          {
-            title: "Lunch Combo",
-            description: "Chicken rice + drink for just $7 (Mon-Fri, 11am-2pm)",
-            expiry: "2025-07-15"
-          }
-        ],
-        "Lian He Fishball Noodles": [
-          {
-            title: "Extra Fishballs",
-            description: "Buy 1 bowl, get 2 extra fishballs free!",
-            expiry: "2025-06-25"
-          }
-        ]
-      };
-
       const offerSection = document.getElementById('offers-section');
       const slider = document.getElementById('offers-slider');
 
-      if (offers[stallName] && offers[stallName].length > 0) {
+      const stallData = window.stallDatabase.find(s => 
+        s.name.toLowerCase() === stallName.toLowerCase()
+      );
+
+      if (stallData && stallData.offers && stallData.offers.length > 0) {
         offerSection.style.display = 'block';
         slider.innerHTML = '';
 
-        offers[stallName].forEach(offer => {
+        stallData.offers.forEach(offer => {
           const card = document.createElement('div');
           card.className = 'offer-card';
           
@@ -452,10 +432,12 @@
 
           slider.appendChild(card);
         });
+      } else {
+        offerSection.style.display = 'none';
       }
     }
 
-    // =============== LOYALTY STAMP SYSTEM ===============
+    // =============== LOYALTY STAMP SYSTEM WITH MILESTONES ===============
     function canAddNewStamp(stampDates) {
       if (stampDates.length === 0) return true;
       const lastStamp = stampDates[stampDates.length - 1];
@@ -469,18 +451,20 @@
       
       let stamps = JSON.parse(localStorage.getItem(key) || '[]');
       
-      // Get redemption threshold
-      let redeemAt = 10;
+      // Get milestones
+      let loyaltyMilestones = [10];
       if (window.stallDatabase) {
         const stallData = window.stallDatabase.find(s => 
           s.name.toLowerCase() === stallName.toLowerCase()
         );
-        if (stallData && stallData.loyaltyRedeemAt) {
-          redeemAt = stallData.loyaltyRedeemAt;
+        if (stallData && stallData.loyaltyMilestones) {
+          loyaltyMilestones = stallData.loyaltyMilestones;
         }
       }
 
-      if (stamps.length >= redeemAt) return;
+      // Check if already reached max milestone
+      const maxMilestone = Math.max(...loyaltyMilestones);
+      if (stamps.length >= maxMilestone) return;
       
       if (canAddNewStamp(stamps)) {
         stamps.push(today);
@@ -496,14 +480,14 @@
       const status = document.getElementById('stamp-status');
       const redeemBtn = document.getElementById('redeem-btn');
 
-      // Get redemption threshold
-      let redeemAt = 10;
+      // Get milestones
+      let loyaltyMilestones = [10];
       if (window.stallDatabase) {
         const stallData = window.stallDatabase.find(s => 
           s.name.toLowerCase() === stallName.toLowerCase()
         );
-        if (stallData && stallData.loyaltyRedeemAt) {
-          redeemAt = stallData.loyaltyRedeemAt;
+        if (stallData && stallData.loyaltyMilestones) {
+          loyaltyMilestones = stallData.loyaltyMilestones;
         }
       }
 
@@ -512,34 +496,54 @@
       for (let i = 0; i < 10; i++) {
         const stamp = document.createElement('div');
         stamp.className = 'stamp';
+        const stampNumber = i + 1;
+        
         if (i < stamps.length) {
-          stamp.classList.add('filled');
           const date = new Date(stamps[i]);
-          // Display: YY-MM (e.g., 24-09)
-          // const label = `${date.getFullYear().toString().slice(-2)}-${String(date.getMonth() + 1).padStart(2, '0')}`;
           const label = `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}`;
           stamp.textContent = label;
-          // Tooltip: Full date (e.g., 27 Sep 2024)
           stamp.title = date.toLocaleDateString('en-SG', {
             day: 'numeric',
             month: 'short',
             year: 'numeric'
           });
+          stamp.classList.add('filled');
+          
+          // Color coding for milestones
+          if (loyaltyMilestones.includes(stampNumber)) {
+            stamp.style.background = '#fff8e6';
+            stamp.style.borderColor = '#F6AD55';
+            stamp.style.color = '#F6AD55';
+            stamp.style.fontWeight = 'bold';
+          } else {
+            stamp.style.background = '#f0f0f0';
+            stamp.style.borderColor = '#999';
+            stamp.style.color = '#555';
+            stamp.style.fontWeight = 'normal';
+          }
         } else {
-          stamp.textContent = i + 1;
+          stamp.textContent = stampNumber;
           stamp.title = "No stamp yet";
+          if (loyaltyMilestones.includes(stampNumber)) {
+            stamp.style.color = '#F6AD55';
+            stamp.style.borderColor = '#F6AD55';
+          }
         }
+        
         grid.appendChild(stamp);
       }
 
-      if (stamps.length === 0) {
-        status.textContent = 'No stamps yet. Visit today to get your first!';
-      } else if (stamps.length < redeemAt) {
-        const next = redeemAt - stamps.length;
-        status.textContent = `You have ${stamps.length} stamp${stamps.length !== 1 ? 's' : ''}. ${next} more to go!`;
-      } else {
-        status.textContent = `🎉 Congratulations! You’ve earned ${redeemAt} stamps!`;
+      // Status and redeem button
+      const reachedMilestones = loyaltyMilestones.filter(m => m <= stamps.length);
+      if (reachedMilestones.length > 0) {
+        const maxReached = Math.max(...reachedMilestones);
+        status.textContent = `🎉 Congratulations! You’ve earned ${maxReached} stamps!`;
+        redeemBtn.textContent = `🎁 Redeem ${maxReached}-Stamp Reward!`;
         redeemBtn.style.display = 'block';
+      } else {
+        const nextMilestone = Math.min(...loyaltyMilestones.filter(m => m > stamps.length));
+        const next = nextMilestone - stamps.length;
+        status.textContent = `You have ${stamps.length} stamp${stamps.length !== 1 ? 's' : ''}. ${next} more to reach ${nextMilestone}-stamp reward!`;
       }
     }
 
@@ -547,7 +551,7 @@
       alert('🎉 Show this screen to the stall owner to claim your reward!');
     });
 
-    // =============== NEW QR SCANNER (html5-qrcode) ===============
+    // =============== QR SCANNER ===============
     let html5QrCode = null;
 
     async function startQRScanner() {
@@ -566,7 +570,7 @@
 
         const config = {
           fps: 10,
-          qrbox: { width: 300, height: 300 }, // Larger for iPhone
+          qrbox: { width: 300, height: 300 },
           aspectRatio: 1.0,
           disableFlip: false,
           supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
@@ -621,10 +625,8 @@
       stopQRScanner();
       
       try {
-        // Handle QR data that may not start with http
         let urlStr = qrData;
         if (!qrData.startsWith('http')) {
-          // Try to construct full URL
           const currentHost = window.location.origin;
           if (qrData.startsWith('/')) {
             urlStr = currentHost + qrData;
@@ -855,6 +857,4 @@
     });
   </script>
 </body>
-
 </html>
-
