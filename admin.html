@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HawkerHunt Admin</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    .header {
+      background: #4299E1;
+      color: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .section-title {
+      font-size: 1.4rem;
+      margin: 0 0 1rem 0;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin: 1rem 0 0.5rem 0;
+      font-weight: 600;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    button {
+      background: #4299E1;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-right: 10px;
+    }
+    button.delete {
+      background: #E53E3E;
+    }
+    .stall-item, .centre-item {
+      background: #fafafa;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border-left: 4px solid #4299E1;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 1.5rem;
+    }
+    .tab {
+      padding: 12px 24px;
+      background: #e2e8f0;
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      margin-right: 4px;
+    }
+    .tab.active {
+      background: #4299E1;
+      color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏪 HawkerHunt Admin Dashboard</h1>
+      <p>Manage centres, stalls, and reviews</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-tab="centres">Hawker Centres</div>
+      <div class="tab" data-tab="stalls">Stalls</div>
+      <div class="tab" data-tab="reviews">Reviews</div>
+    </div>
+
+    <!-- Centres Tab -->
+    <div class="tab-content active" id="centres-tab">
+      <div class="card">
+        <h2 class="section-title">Add New Hawker Centre</h2>
+        <form id="centre-form">
+          <label for="centre_id">Centre ID (short, e.g. "chinatown")</label>
+          <input type="text" id="centre_id" required>
+
+          <label for="centre_name">Name</label>
+          <input type="text" id="centre_name" required>
+
+          <label for="mrt">MRT Station</label>
+          <input type="text" id="mrt" required>
+
+          <label for="address">Address</label>
+          <input type="text" id="address" required>
+
+          <label for="about">About</label>
+          <textarea id="about" rows="3"></textarea>
+
+          <label for="image_url">Image URL</label>
+          <input type="text" id="image_url">
+
+          <button type="submit">Add Centre</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">All Centres</h2>
+        <div id="centres-list">
+          <p>Loading centres...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stalls Tab -->
+    <div class="tab-content" id="stalls-tab">
+      <div class="card">
+        <h2 class="section-title">Add New Stall</h2>
+        <form id="stall-form">
+          <label for="stall_id">Stall ID (e.g. "tian-tian")</label>
+          <input type="text" id="stall_id" required>
+
+          <label for="stall_name">Stall Name</label>
+          <input type="text" id="stall_name" required>
+
+          <label for="stall_centre_id">Hawker Centre</label>
+          <select id="stall_centre_id" required>
+            <option value="">Select a Centre</option>
+            <!-- Will be populated by JS -->
+          </select>
+
+          <label for="cuisine">Cuisine (comma-separated, e.g. Chinese, Noodles)</label>
+          <input type="text" id="cuisine">
+
+          <label for="stall_about">About</label>
+          <textarea id="stall_about" rows="3"></textarea>
+
+          <label for="photo_urls">Photo URLs (comma-separated)</label>
+          <input type="text" id="photo_urls">
+
+          <label for="menu_json">Menu (JSON format)</label>
+          <textarea id="menu_json" rows="4" placeholder='[{"name":"Chicken Rice","price":6}]'></textarea>
+
+          <label for="offers_json">Offers (JSON format)</label>
+          <textarea id="offers_json" rows="4" placeholder='[{"title":"Free Soup","expiry":"2025-06-30"}]'></textarea>
+
+          <label for="loyalty_milestones">Loyalty Milestones (comma-separated, e.g. 2,5,10)</label>
+          <input type="text" id="loyalty_milestones" value="10">
+
+          <button type="submit">Add Stall</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">All Stalls</h2>
+        <div id="stalls-list">
+          <p>Loading stalls...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reviews Tab -->
+    <div class="tab-content" id="reviews-tab">
+      <div class="card">
+        <h2 class="section-title">All Reviews</h2>
+        <div id="reviews-list">
+          <p>Loading reviews...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 👇 REPLACE WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+    const ADMIN_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-amvdKCRNdfHL3qMCt3p5goeWHLWDiUiw7BTh8_VRwzVSFn4N9HIuskkR7hqDC5Eycg/exec';
+    const ADMIN_PASSWORD = '@021705d03';
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+      });
+    });
+
+    // Load data on init
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCentres();
+      loadStalls();
+      loadReviews();
+    });
+
+    // =============== CENTRES ===============
+    async function loadCentres() {
+      try {
+        const response = await fetch(`${ADMIN_SCRIPT_URL}?action=getCentres`);
+        const centres = await response.json();
+        
+        const list = document.getElementById('centres-list');
+        if (centres.length === 0) {
+          list.innerHTML = '<p>No centres yet.</p>';
+          return;
+        }
+
+        list.innerHTML = '';
+        centres.forEach(centre => {
+          const div = document.createElement('div');
+          div.className = 'centre-item';
+          div.innerHTML = `
+            <strong>${centre.name}</strong> (${centre.mrt})<br>
+            <small>ID: ${centre.centre_id}</small>
+            <button class="delete" onclick="deleteCentre('${centre.centre_id}')">Delete</button>
+          `;
+          list.appendChild(div);
+        });
+
+        // Populate centre dropdown in stall form
+        const select = document.getElementById('stall_centre_id');
+        select.innerHTML = '<option value="">Select a Centre</option>';
+        centres.forEach(centre => {
+          const option = document.createElement('option');
+          option.value = centre.centre_id;
+          option.textContent = centre.name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Error loading centres:', error);
+        document.getElementById('centres-list').innerHTML = '<p>❌ Failed to load centres.</p>';
+      }
+    }
+
+    document.getElementById('centre-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        action: 'addCentre',
+        centre_id: document.getElementById('centre_id').value,
+        name: document.getElementById('centre_name').value,
+        mrt: document.getElementById('mrt').value,
+        address: document.getElementById('address').value,
+        about: document.getElementById('about').value,
+        image_url: document.getElementById('image_url').value
+      };
+
+      try {
+        await fetch(ADMIN_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify(data, password: @021705d03)
+        });
+        alert('✅ Centre added!');
+        document.getElementById('centre-form').reset();
+        loadCentres();
+      } catch (error) {
+        alert('❌ Failed to add centre.');
+        console.error(error);
+      }
+    });
+
+    async function deleteCentre(centreId) {
+      if (!confirm('Delete this centre?')) return;
+      try {
+        await fetch(ADMIN_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'deleteCentre', centre_id: centreId, password: @021705d03 })
+        });
+        loadCentres();
+      } catch (error) {
+        alert('❌ Failed to delete centre.');
+      }
+    }
+
+    // =============== STALLS ===============
+    async function loadStalls() {
+      try {
+        const response = await fetch(`${ADMIN_SCRIPT_URL}?action=getStalls`);
+        const stalls = await response.json();
+        
+        const list = document.getElementById('stalls-list');
+        if (stalls.length === 0) {
+          list.innerHTML = '<p>No stalls yet.</p>';
+          return;
+        }
+
+        list.innerHTML = '';
+        stalls.forEach(stall => {
+          const div = document.createElement('div');
+          div.className = 'stall-item';
+          div.innerHTML = `
+            <strong>${stall.name}</strong><br>
+            <small>Centre: ${stall.centre_id} | Cuisine: ${stall.cuisine || ''}</small><br>
+            <small>ID: ${stall.stall_id}</small>
+            <button class="delete" onclick="deleteStall('${stall.stall_id}')">Delete</button>
+          `;
+          list.appendChild(div);
+        });
+      } catch (error) {
+        console.error('Error loading stalls:', error);
+        document.getElementById('stalls-list').innerHTML = '<p>❌ Failed to load stalls.</p>';
+      }
+    }
+
+    document.getElementById('stall-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        action: 'addStall',
+        stall_id: document.getElementById('stall_id').value,
+        name: document.getElementById('stall_name').value,
+        centre_id: document.getElementById('stall_centre_id').value,
+        cuisine: document.getElementById('cuisine').value.split(',').map(s => s.trim()).filter(s => s),
+        about: document.getElementById('stall_about').value,
+        photo_urls: document.getElementById('photo_urls').value.split(',').map(s => s.trim()).filter(s => s),
+        menu_json: document.getElementById('menu_json').value,
+        offers_json: document.getElementById('offers_json').value,
+        loyalty_milestones: document.getElementById('loyalty_milestones').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
+      };
+
+      try {
+        await fetch(ADMIN_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify(data, password: @021705d03)
+        });
+        alert('✅ Stall added!');
+        document.getElementById('stall-form').reset();
+        loadStalls();
+      } catch (error) {
+        alert('❌ Failed to add stall.');
+        console.error(error);
+      }
+    });
+
+    async function deleteStall(stallId) {
+      if (!confirm('Delete this stall?')) return;
+      try {
+        await fetch(ADMIN_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'deleteStall', stall_id: stallId, password: @021705d03 })
+        });
+        loadStalls();
+      } catch (error) {
+        alert('❌ Failed to delete stall.');
+      }
+    }
+
+    // =============== REVIEWS ===============
+    async function loadReviews() {
+      try {
+        const response = await fetch(`${ADMIN_SCRIPT_URL}?action=getReviews`);
+        const reviews = await response.json();
+        
+        const list = document.getElementById('reviews-list');
+        if (reviews.length === 0) {
+          list.innerHTML = '<p>No reviews yet.</p>';
+          return;
+        }
+
+        list.innerHTML = '';
+        reviews.forEach(review => {
+          const div = document.createElement('div');
+          div.className = 'stall-item';
+          const date = new Date(review.timestamp);
+          div.innerHTML = `
+            <strong>${review.stallName}</strong> - ${review.rating}★<br>
+            <em>"${review.comment}"</em><br>
+            <small>Queue: ${review.queueTime} | ${date.toLocaleDateString()}</small><br>
+            <button class="delete" onclick="deleteReview('${review.id}')">Delete</button>
+          `;
+          list.appendChild(div);
+        });
+      } catch (error) {
+        console.error('Error loading reviews:', error);
+        document.getElementById('reviews-list').innerHTML = '<p>❌ Failed to load reviews.</p>';
+      }
+    }
+
+    async function deleteReview(reviewId) {
+      if (!confirm('Delete this review?')) return;
+      try {
+        await fetch(ADMIN_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'deleteReview', review_id: reviewId, password: @021705d03 })
+        });
+        loadReviews();
+      } catch (error) {
+        alert('❌ Failed to delete review.');
+      }
+    }
+  </script>
+</body>
+</html>
