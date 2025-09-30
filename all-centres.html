@@ -4,96 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>All Centres - HawkerHunt SG</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f7f7f7;
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
-    .hero {
-      background: #4299E1;
-      color: white;
-      padding: 2rem;
-      text-align: center;
-    }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.5rem;
-    }
-    .centres-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin: 2rem 0;
-    }
-    .centre-card {
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .centre-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-    }
-    .centre-image {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-    }
-    .centre-body {
-      padding: 1.25rem;
-    }
-    .centre-name {
-      font-size: 1.3rem;
-      margin: 0 0 0.5rem 0;
-      color: #333;
-    }
-    .centre-info {
-      color: #777;
-      font-size: 0.95rem;
-      margin: 0.25rem 0;
-    }
-    .stall-count {
-      background: #F6AD55;
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.85rem;
-      display: inline-block;
-      margin-top: 0.5rem;
-    }
-    .back-home {
-      display: block;
-      text-align: center;
-      margin: 2rem auto;
-      color: #4299E1;
-      text-decoration: none;
-      font-weight: 600;
-      padding: 12px 24px;
-      border: 2px solid #4299E1;
-      border-radius: 8px;
-      width: fit-content;
-    }
-    .back-home:hover {
-      background: #4299E1;
-      color: white;
-    }
-    .loading {
-      text-align: center;
-      padding: 3rem;
-      color: #777;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="hero">
-    <h1 style="font-size: 2rem; margin: 0 0 0.5rem 0;">🏪 All Hawker Centres</h1>
+    <h1>🏪 All Hawker Centres</h1>
     <p>Browse all hawker centres in Singapore. Click to explore stalls and reviews.</p>
   </div>
 
@@ -105,55 +20,74 @@
     <a href="index.html" class="back-home">← Back to Home</a>
   </div>
 
-  <script src="data.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwR731pFqExwMWQY_YXGzdBQBk2eqwnN7oWc0l94YOVen_3icpJByxZWvg87eO7HRuk9A/exec';
+
+    async function loadCentres() {
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=getCentres`);
+        return await response.json();
+      } catch (error) {
+        console.error('Error loading centres:', error);
+        return [];
+      }
+    }
+
+    async function loadStalls() {
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=getStalls`);
+        return await response.json();
+      } catch (error) {
+        console.error('Error loading stalls:', error);
+        return [];
+      }
+    }
+
+    async function loadAllCentres() {
       const container = document.getElementById('centres-container');
       
-      if (!window.centreDatabase || !window.stallDatabase) {
-        container.innerHTML = '<p>Error: Data not loaded. Please refresh the page.</p>';
-        return;
-      }
+      const centres = await loadCentres();
+      const stalls = await loadStalls();
 
-      // Sort centres alphabetically
-      const sortedCentres = [...window.centreDatabase].sort((a, b) => 
-        a.name.localeCompare(b.name)
-      );
-
-      if (sortedCentres.length === 0) {
+      if (centres.length === 0) {
         container.innerHTML = '<p>No centres available.</p>';
         return;
       }
 
+      const sortedCentres = [...centres].sort((a, b) => 
+        a.name.localeCompare(b.name)
+      );
+
       container.innerHTML = '';
 
       sortedCentres.forEach(centre => {
-        // Count stalls for this centre
-        const stallCount = window.stallDatabase.filter(stall => 
-          stall.centre === centre.name
-        ).length;
+        const stallCount = stalls.filter(stall => stall.centre_id === centre.centre_id).length;
 
         const card = document.createElement('div');
-        card.className = 'centre-card';
+        card.className = 'card';
         card.onclick = () => {
           window.location.href = `centre.html?name=${encodeURIComponent(centre.name)}`;
         };
 
-        const imageUrl = centre.image || 'https://via.placeholder.com/300x180?text=Hawker+Centre';
+        const imageUrl = centre.image_url || 'https://via.placeholder.com/300x180?text=Hawker+Centre';
 
         card.innerHTML = `
-          <img src="${imageUrl}" alt="${centre.name}" class="centre-image">
-          <div class="centre-body">
-            <h3 class="centre-name">${centre.name}</h3>
-            <div class="centre-info">🚇 ${centre.mrt}</div>
-            <div class="centre-info">📍 ${centre.address}</div>
-            <div class="stall-count">${stallCount} stall${stallCount !== 1 ? 's' : ''}</div>
+          <img src="${imageUrl}" alt="${centre.name}" style="width:100%; height:180px; object-fit:cover;">
+          <div class="card-body">
+            <h3 style="font-size: 1.3rem; margin: 0 0 0.5rem 0;">${centre.name}</h3>
+            <div style="color: #777; font-size: 0.95rem; margin: 0.25rem 0;">🚇 ${centre.mrt}</div>
+            <div style="color: #777; font-size: 0.95rem; margin: 0.25rem 0;">📍 ${centre.address}</div>
+            <div style="background: #F6AD55; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.85rem; display: inline-block; margin-top: 0.5rem;">
+              ${stallCount} stall${stallCount !== 1 ? 's' : ''}
+            </div>
           </div>
         `;
 
         container.appendChild(card);
       });
-    });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAllCentres);
   </script>
 </body>
 </html>
