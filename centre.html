@@ -4,113 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Centre Detail - HawkerHunt SG</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 1.5rem;
-    }
-    .header {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-    .centre-name {
-      font-size: 1.8rem;
-      color: #333;
-      margin: 0 0 0.5rem 0;
-    }
-    .mrt-station {
-      color: #777;
-      font-size: 1rem;
-      margin: 0 0 1rem 0;
-    }
-    .section {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-    .section-title {
-      font-size: 1.3rem;
-      margin: 0 0 1rem 0;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #f0f0f0;
-    }
-    .map-placeholder {
-      background: #e9e9e9;
-      height: 200px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #777;
-      margin: 1rem 0;
-    }
-    .stall-list {
-      display: grid;
-      gap: 1rem;
-    }
-    .stall-card {
-      display: flex;
-      align-items: center;
-      padding: 1rem;
-      background: #fafafa;
-      border-radius: 12px;
-      border: 1px solid #eee;
-      cursor: pointer;
-    }
-    .stall-card:hover {
-      background: #f5f5f5;
-      transform: translateX(4px);
-      transition: all 0.2s;
-    }
-    .stall-image {
-      width: 60px;
-      height: 60px;
-      border-radius: 8px;
-      object-fit: cover;
-      margin-right: 1rem;
-    }
-    .stall-info {
-      flex: 1;
-    }
-    .stall-name {
-      font-weight: 600;
-      margin: 0 0 0.25rem 0;
-    }
-    .stall-cuisine {
-      font-size: 0.9rem;
-      color: #777;
-    }
-    .stall-rating {
-      color: #F6AD55;
-      font-weight: bold;
-    }
-    .back-home {
-      display: block;
-      text-align: center;
-      margin: 1rem 0;
-      color: #F6AD55;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .about-text {
-      line-height: 1.6;
-      color: #555;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
@@ -119,16 +13,14 @@
       <div class="mrt-station" id="mrt-station">-</div>
     </div>
 
-    <!-- About Section -->
-    <div class="section">
+    <div class="card">
       <h2 class="section-title">📌 About This Centre</h2>
       <p class="about-text" id="about-text">Loading centre information...</p>
     </div>
 
-    <!-- Map Section -->
-    <div class="section">
+    <div class="card">
       <h2 class="section-title">📍 Location</h2>
-      <div class="map-placeholder">
+      <div style="background: #e9e9e9; height: 200px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #777; margin: 1rem 0;">
         <p>Map will be integrated soon!</p>
       </div>
       <p style="text-align: center; margin-top: 0.5rem;">
@@ -136,8 +28,7 @@
       </p>
     </div>
 
-    <!-- Stalls Section -->
-    <div class="section">
+    <div class="card">
       <h2 class="section-title">🍜 All Stalls (<span id="stall-count">0</span>)</h2>
       <div class="stall-list" id="stall-list">
         <p>Loading stalls...</p>
@@ -147,71 +38,87 @@
     <a href="index.html" class="back-home">← Back to Home</a>
   </div>
 
-  <script src="data.js"></script>
   <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqSBQTvFgGmzIq1WvSu7o7mOXwpFldTmTNnzPhMBOY2dZX8Y2kNQtp4zvzzS5teNJJ2Q/exec';
+
     function getCentreNameFromURL() {
       const params = new URLSearchParams(window.location.search);
       return params.get('name');
     }
 
-    function loadCentreData() {
+    async function loadCentreData() {
       const centreName = getCentreNameFromURL();
       if (!centreName) {
         document.querySelector('.centre-name').textContent = 'Error: No centre specified';
         return;
       }
 
-      // Find centre in data.js
-      const centreData = window.centreDatabase.find(c => 
-        c.name.toLowerCase() === decodeURIComponent(centreName).toLowerCase()
-      );
+      try {
+        // Load centres
+        const centresResponse = await fetch(`${SCRIPT_URL}?action=getCentres`);
+        const centres = await centresResponse.json();
+        
+        const centreData = centres.find(c => 
+          c.name.toLowerCase() === decodeURIComponent(centreName).toLowerCase()
+        );
 
-      if (!centreData) {
-        document.querySelector('.centre-name').textContent = centreName;
-        document.getElementById('mrt-station').textContent = 'Centre not found in database';
-        document.getElementById('about-text').textContent = 'No information available.';
-        document.getElementById('address-text').textContent = 'Address not available.';
-        document.getElementById('stall-list').innerHTML = '<p>No stalls found for this centre.</p>';
-        return;
-      }
+        if (!centreData) {
+          document.querySelector('.centre-name').textContent = centreName;
+          document.getElementById('mrt-station').textContent = 'Centre not found in database';
+          document.getElementById('about-text').textContent = 'No information available.';
+          document.getElementById('address-text').textContent = 'Address not available.';
+          document.getElementById('stall-list').innerHTML = '<p>No stalls found for this centre.</p>';
+          return;
+        }
 
-      // Populate centre info
-      document.querySelector('.centre-name').textContent = centreData.name;
-      document.getElementById('mrt-station').textContent = `🚇 ${centreData.mrt}`;
-      document.getElementById('about-text').textContent = centreData.about || 'No description available yet.';
-      document.getElementById('address-text').textContent = centreData.address || 'Address not available.';
+        // Populate centre info
+        document.querySelector('.centre-name').textContent = centreData.name;
+        document.getElementById('mrt-station').textContent = `🚇 ${centreData.mrt}`;
+        document.getElementById('about-text').textContent = centreData.about || 'No description available yet.';
+        document.getElementById('address-text').textContent = centreData.address || 'Address not available.';
 
-      // Populate stalls
-      const stallList = document.getElementById('stall-list');
-      const stalls = window.stallDatabase.filter(s => s.centre === centreData.name);
+        // Load stalls for this centre
+        const stallsResponse = await fetch(`${SCRIPT_URL}?action=getStalls`);
+        const stalls = await stallsResponse.json();
+        const centreStalls = stalls.filter(stall => stall.centre_id === centreData.centre_id);
 
-      if (stalls.length === 0) {
-        stallList.innerHTML = '<p>No stalls listed for this centre yet.</p>';
-      } else {
-        document.getElementById('stall-count').textContent = stalls.length;
-        stallList.innerHTML = '';
+        const stallList = document.getElementById('stall-list');
+        if (centreStalls.length === 0) {
+          stallList.innerHTML = '<p>No stalls listed for this centre yet.</p>';
+        } else {
+          document.getElementById('stall-count').textContent = centreStalls.length;
+          stallList.innerHTML = '';
 
-        stalls.forEach(stall => {
-          const stallCard = document.createElement('div');
-          stallCard.className = 'stall-card';
-          stallCard.onclick = () => {
-            window.location.href = `stall.html?name=${encodeURIComponent(stall.name)}`;
-          };
+          centreStalls.forEach(stall => {
+            const stallCard = document.createElement('div');
+            stallCard.className = 'stall-item';
+            stallCard.style.cursor = 'pointer';
+            stallCard.onclick = () => {
+              window.location.href = `stall.html?name=${encodeURIComponent(stall.name)}`;
+            };
 
-          // Use placeholder image if no photo
-          const imageUrl = stall.photos && stall.photos.length > 0 ? stall.photos[0] : 'https://via.placeholder.com/60?text=🍲';
+            const imageUrl = stall.photo_urls && stall.photo_urls.length > 0 ? stall.photo_urls[0] : 'https://via.placeholder.com/60?text=🍲';
 
-          stallCard.innerHTML = `
-            <img src="${imageUrl}" alt="${stall.name}" class="stall-image">
-            <div class="stall-info">
-              <div class="stall-name">${stall.name}</div>
-              <div class="stall-cuisine">${stall.cuisine ? stall.cuisine.join(', ') : 'Cuisine not specified'}</div>
-            </div>
-            <div class="stall-rating">→</div>
-          `;
+            stallCard.innerHTML = `
+              <div style="display: flex; align-items: center;">
+                <img src="${imageUrl}" alt="${stall.name}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; margin-right: 1rem;">
+                <div style="flex: 1;">
+                  <div style="font-weight: 600; margin: 0 0 0.25rem 0;">${stall.name}</div>
+                  <div style="font-size: 0.9rem; color: #777;">
+                    ${stall.cuisine ? stall.cuisine.join(', ') : 'Cuisine not specified'}
+                  </div>
+                </div>
+                <div style="color: #F6AD55; font-weight: bold;">→</div>
+              </div>
+            `;
 
-          stallList.appendChild(stallCard);
-        });
+            stallList.appendChild(stallCard);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading centre data:', error);
+        document.querySelector('.centre-name').textContent = 'Error Loading Centre';
+        document.getElementById('stall-list').innerHTML = '<p>❌ Failed to load stalls. Please try again later.</p>';
       }
     }
 

@@ -4,85 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HawkerHunt SG</title>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
-    .hero { background: #F6AD55; color: white; padding: 2rem; text-align: center; }
-    .container { max-width: 720px; margin: 0 auto; padding: 1.5rem; }
-    .search-box { display: flex; gap: 8px; margin: 1rem 0; }
-    .search-box input { flex: 1; padding: 12px 16px; border-radius: 9999px; border: 1px solid #ddd; }
-    .search-box button { padding: 12px 24px; border-radius: 9999px; cursor: pointer; }
-    .orange-btn { background: #F6AD55; color: white; border: none; }
-    .outline-btn { background: white; color: #F6AD55; border: 2px solid #F6AD55; }
-    .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1rem; cursor: pointer; }
-    .card:hover { transform: translateY(-4px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); transition: all 0.2s; }
-    .card img { width: 100%; height: 160px; object-fit: cover; }
-    .card-body { padding: 1rem; }
-    .footer { text-align: center; padding: 2rem; color: #aaa; font-size: 0.9rem; }
-    .section-title { font-size: 1.3rem; margin: 2rem 0 1rem 0; color: #333; }
-    .view-all { text-align: center; margin: 1rem 0; }
-    .view-all-btn { 
-      background: #4299E1; 
-      color: white; 
-      padding: 12px 24px; 
-      border-radius: 8px; 
-      text-decoration: none; 
-      font-weight: 600;
-      display: inline-block;
-    }
-    .view-all-btn:hover { background: #3182CE; }
-    .review-card {
-      background: white;
-      border-radius: 12px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .review-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
-    .stall-name {
-      font-weight: 600;
-      color: #333;
-    }
-    .rating {
-      color: #F6AD55;
-      font-weight: bold;
-    }
-    .hawker-centre {
-      font-size: 0.9rem;
-      color: #777;
-      margin-bottom: 0.5rem;
-    }
-    .comment {
-      margin-bottom: 0.5rem;
-      line-height: 1.4;
-    }
-    .queue {
-      font-size: 0.9rem;
-      color: #555;
-    }
-    .submit-review-btn {
-      display: block;
-      width: 100%;
-      text-align: center;
-      background: #F6AD55;
-      color: white;
-      padding: 14px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-      margin: 1.5rem 0;
-    }
-    .submit-review-btn:hover {
-      background: #E59A40;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="hero">
-    <h1 style="font-size: 2rem; margin: 0 0 0.5rem 0;">HawkerHunt SG</h1>
+    <h1>HawkerHunt SG</h1>
     <p>Discover the best hawker stalls. Skip the guesswork.</p>
   </div>
 
@@ -94,23 +20,20 @@
       </div>
     </form>
 
-    <!-- Search Results -->
-    <div id="search-results" style="display: none; margin-top: 2rem;">
-      <h2 class="section-title">🔍 Search Results</h2>
-      <div id="search-results-list"></div>
-    </div>
-
-    <!-- Featured Centres -->
     <h2 class="section-title">🏆 Featured Hawker Centres</h2>
     <div id="featured-centres">
       <p>Loading featured centres...</p>
     </div>
     
-    <div class="view-all">
+    <div style="text-align: center; margin: 1rem 0;">
       <a href="all-centres.html" class="view-all-btn">View All Centres →</a>
     </div>
 
-    <!-- Recent Reviews -->
+    <div id="search-results" style="display: none; margin-top: 2rem;">
+      <h2 class="section-title">🔍 Search Results</h2>
+      <div id="search-results-list"></div>
+    </div>
+
     <h2 class="section-title">⭐ Recent Reviews</h2>
     <div id="reviews-container">
       <p>Loading reviews...</p>
@@ -123,31 +46,44 @@
     Built with ❤️ for Singapore’s Hawker Culture
   </div>
 
-  <script src="data.js"></script>
   <script>
+    // 👇 REPLACE WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_WEB_APP_ID/exec';
+
     document.getElementById('searchForm').addEventListener('submit', function(e) {
       e.preventDefault();
     });
 
-    document.getElementById('nearMeBtn')?.addEventListener('click', function() {
-      if (navigator.geolocation) {
-        alert('📍 Finding hawker centres near you...');
-        setTimeout(() => alert('Found 3 centres near you!'), 1500);
-      } else {
-        alert('Geolocation not supported. Try searching by name.');
+    async function loadCentres() {
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=getCentres`);
+        return await response.json();
+      } catch (error) {
+        console.error('Error loading centres:', error);
+        return [];
       }
-    });
+    }
 
-    // Load featured centres (random 3)
-    function loadFeaturedCentres() {
+    async function loadStalls() {
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=getStalls`);
+        return await response.json();
+      } catch (error) {
+        console.error('Error loading stalls:', error);
+        return [];
+      }
+    }
+
+    async function loadFeaturedCentres() {
       const container = document.getElementById('featured-centres');
+      const centres = await loadCentres();
       
-      if (!window.centreDatabase || window.centreDatabase.length === 0) {
+      if (centres.length === 0) {
         container.innerHTML = '<p>No centres available.</p>';
         return;
       }
 
-      const shuffled = [...window.centreDatabase].sort(() => 0.5 - Math.random());
+      const shuffled = [...centres].sort(() => 0.5 - Math.random());
       const featured = shuffled.slice(0, 3);
 
       container.innerHTML = '';
@@ -156,11 +92,11 @@
         const card = document.createElement('div');
         card.className = 'card';
         card.onclick = () => {
-          window.location.href = `centre.html?name=${encodeURIComponent(centre.name)}`;
+          window.location.href = `all-centres.html?centre=${encodeURIComponent(centre.centre_id)}`;
         };
 
         card.innerHTML = `
-          <img src="${centre.image || 'https://via.placeholder.com/300x160?text=Hawker+Centre'}" alt="${centre.name}">
+          <img src="${centre.image_url || 'https://via.placeholder.com/300x160?text=Hawker+Centre'}" alt="${centre.name}">
           <div class="card-body">
             <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">${centre.name}</h3>
             <p style="color: #777; margin: 0 0 0.25rem 0;">🚇 ${centre.mrt}</p>
@@ -172,22 +108,12 @@
       });
     }
 
-    // Load reviews from Google Apps Script
     async function loadReviews() {
       const container = document.getElementById('reviews-container');
       container.innerHTML = '<p>Loading reviews...</p>';
 
       try {
-        // 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-        const scriptURL = 'https://script.google.com/macros/s/AKfycby1na25Wopg0jlqbV1M0JQGGWWiF2NijobmHROEWEXdrUTIdfIGWfdgbB6uqut4CDQftg/exec';
-
-        const response = await fetch(scriptURL, {
-          method: 'GET',
-          mode: 'cors'
-        });
-
-        if (!response.ok) throw new Error('Network response was not ok');
-
+        const response = await fetch(SCRIPT_URL);
         const reviews = await response.json();
 
         if (reviews.length === 0) {
@@ -231,40 +157,36 @@
       }
     }
 
-    // =============== SEARCH FUNCTIONALITY ===============
     function loadSearchData() {
-      if (!window.centreDatabase || !window.stallDatabase) return;
-
       const searchInput = document.getElementById('searchInput');
       const searchResults = document.getElementById('search-results');
       const resultsList = document.getElementById('search-results-list');
 
-      searchInput.addEventListener('input', () => {
+      searchInput.addEventListener('input', async () => {
         const query = searchInput.value.trim().toLowerCase();
         if (query.length < 2) {
           searchResults.style.display = 'none';
           return;
         }
 
-        // Search centres
-        const centreResults = window.centreDatabase.filter(centre =>
+        const centres = await loadCentres();
+        const stalls = await loadStalls();
+
+        const centreResults = centres.filter(centre =>
           centre.name.toLowerCase().includes(query) ||
           centre.mrt.toLowerCase().includes(query)
         );
 
-        // Search stalls
-        const stallResults = window.stallDatabase.filter(stall =>
+        const stallResults = stalls.filter(stall =>
           stall.name.toLowerCase().includes(query) ||
           (stall.cuisine && stall.cuisine.some(c => c.toLowerCase().includes(query)))
         );
 
-        // Render results
         resultsList.innerHTML = '';
 
         if (centreResults.length === 0 && stallResults.length === 0) {
           resultsList.innerHTML = '<p>No matches found.</p>';
         } else {
-          // Centres
           if (centreResults.length > 0) {
             const centreHeader = document.createElement('h3');
             centreHeader.textContent = 'Hawker Centres';
@@ -276,7 +198,7 @@
               card.className = 'card';
               card.style.cursor = 'pointer';
               card.onclick = () => {
-                window.location.href = `centre.html?name=${encodeURIComponent(centre.name)}`;
+                window.location.href = `all-centres.html?centre=${encodeURIComponent(centre.centre_id)}`;
               };
               card.innerHTML = `
                 <div class="card-body">
@@ -288,7 +210,6 @@
             });
           }
 
-          // Stalls
           if (stallResults.length > 0) {
             const stallHeader = document.createElement('h3');
             stallHeader.textContent = 'Stalls';
@@ -305,7 +226,7 @@
               card.innerHTML = `
                 <div class="card-body">
                   <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">${stall.name}</h3>
-                  <p style="color: #777; margin: 0;">📍 ${stall.centre}</p>
+                  <p style="color: #777; margin: 0;">📍 ${stall.centre_id}</p>
                   <p style="color: #999; font-size: 0.9rem; margin: 0;">
                     ${stall.cuisine ? stall.cuisine.join(', ') : ''}
                   </p>
@@ -320,7 +241,6 @@
       });
     }
 
-    // Load when page is ready
     document.addEventListener('DOMContentLoaded', function() {
       loadFeaturedCentres();
       loadReviews();
@@ -328,5 +248,4 @@
     });
   </script>
 </body>
-
 </html>

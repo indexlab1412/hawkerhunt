@@ -4,84 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Submit Review - HawkerHunt SG</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 1.5rem;
-    }
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin-bottom: 2rem;
-    }
-    h1 {
-      color: #F6AD55;
-      font-size: 1.8rem;
-      margin-top: 0;
-    }
-    label {
-      display: block;
-      margin: 1rem 0 0.5rem 0;
-      font-weight: 600;
-    }
-    select, textarea, input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 1rem;
-      margin-bottom: 1rem;
-    }
-    .rating {
-      display: flex;
-      gap: 4px;
-    }
-    .rating input {
-      display: none;
-    }
-    .rating label {
-      font-size: 2rem;
-      cursor: pointer;
-      color: #ddd;
-    }
-    .rating input:checked ~ label,
-    .rating label:hover,
-    .rating label:hover ~ label {
-      color: #F6AD55;
-    }
-    button {
-      background: #F6AD55;
-      color: white;
-      border: none;
-      padding: 14px 24px;
-      font-size: 1.1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      width: 100%;
-      font-weight: 600;
-    }
-    button:hover {
-      background: #E59A40;
-    }
-    .back-home {
-      display: block;
-      text-align: center;
-      margin-top: 1rem;
-      color: #F6AD55;
-      text-decoration: none;
-      font-weight: 500;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
@@ -93,7 +16,6 @@
         <label for="hawkerCentre">Hawker Centre</label>
         <select id="hawkerCentre" name="Hawker Centre" required>
           <option value="">Select a Hawker Centre</option>
-          <!-- Will be populated by JavaScript -->
         </select>
 
         <label for="stall">Stall Name</label>
@@ -134,93 +56,106 @@
     </div>
   </div>
 
-  <script src="data.js"></script>
   <script>
-    // 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby1na25Wopg0jlqbV1M0JQGGWWiF2NijobmHROEWEXdrUTIdfIGWfdgbB6uqut4CDQftg/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqSBQTvFgGmzIq1WvSu7o7mOXwpFldTmTNnzPhMBOY2dZX8Y2kNQtp4zvzzS5teNJJ2Q/exec';
 
-    document.addEventListener('DOMContentLoaded', function() {
-      const hawkerSelect = document.getElementById('hawkerCentre');
-      const stallSelect = document.getElementById('stall');
+    async function loadCentresAndStalls() {
+      try {
+        const centresResponse = await fetch(`${SCRIPT_URL}?action=getCentres`);
+        const centres = await centresResponse.json();
+        
+        const stallsResponse = await fetch(`${SCRIPT_URL}?action=getStalls`);
+        const stalls = await stallsResponse.json();
 
-      // Populate hawker centres from data.js
-      if (window.centreDatabase && window.centreDatabase.length > 0) {
-        window.centreDatabase.forEach(centre => {
+        const hawkerSelect = document.getElementById('hawkerCentre');
+        const stallSelect = document.getElementById('stall');
+
+        // Populate centres
+        centres.forEach(centre => {
           const option = document.createElement('option');
           option.value = centre.name;
           option.textContent = centre.name;
           hawkerSelect.appendChild(option);
         });
+
+        // Populate stalls when centre changes
+        hawkerSelect.addEventListener('change', function() {
+          stallSelect.innerHTML = '<option value="">Select a Stall</option>';
+          const selectedCentre = this.value;
+          
+          if (selectedCentre) {
+            const centreData = centres.find(c => c.name === selectedCentre);
+            if (centreData) {
+              const centreStalls = stalls.filter(stall => stall.centre_id === centreData.centre_id);
+              centreStalls.forEach(stall => {
+                const option = document.createElement('option');
+                option.value = stall.name;
+                option.textContent = stall.name;
+                stallSelect.appendChild(option);
+              });
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error('Error loading centres/stalls:', error);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCentresAndStalls);
+
+    document.getElementById('reviewForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const rating = document.querySelector('input[name="Rating"]:checked')?.value;
+      const comment = document.getElementById('comment').value.trim();
+      const queue = document.getElementById('queue').value;
+
+      if (!rating || !comment || !queue) {
+        alert('Please fill in all required fields.');
+        return;
       }
 
-      // Populate stalls when hawker centre changes
-      hawkerSelect.addEventListener('change', function() {
-        stallSelect.innerHTML = '<option value="">Select a Stall</option>';
-        const selectedCentre = this.value;
-        
-        if (selectedCentre && window.stallDatabase) {
-          const stalls = window.stallDatabase.filter(stall => stall.centre === selectedCentre);
-          stalls.forEach(stall => {
-            const option = document.createElement('option');
-            option.value = stall.name;
-            option.textContent = stall.name;
-            stallSelect.appendChild(option);
-          });
+      const hawkerSelect = document.getElementById('hawkerCentre');
+      const stallSelect = document.getElementById('stall');
+
+      const formData = {
+        "Hawker Centre": hawkerSelect.value,
+        "Stall Name": stallSelect.value,
+        "Rating": rating,
+        "Review Comment": comment,
+        "Queue Time": queue
+      };
+
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+
+        alert('✅ Thank you! Your review has been saved.');
+
+        const stallName = stallSelect.value.trim();
+        if (stallName) {
+          setTimeout(() => {
+            window.location.href = `stall.html?name=${encodeURIComponent(stallName)}`;
+          }, 2000);
+        } else {
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 2000);
         }
-      });
 
-      // Handle form submission
-      document.getElementById('reviewForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const rating = document.querySelector('input[name="Rating"]:checked')?.value;
-        const comment = document.getElementById('comment').value.trim();
-        const queue = document.getElementById('queue').value;
-
-        if (!rating || !comment || !queue) {
-          alert('Please fill in all required fields.');
-          return;
-        }
-
-        // Collect form data
-        const formData = {
-          "Hawker Centre": hawkerSelect.value,
-          "Stall Name": stallSelect.value,
-          "Rating": rating,
-          "Review Comment": comment,
-          "Queue Time": queue
-        };
-
-        try {
-          const response = await fetch(scriptURL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-          });
-
-          alert('✅ Thank you! Your review has been saved.');
-
-          const stallName = stallSelect.value.trim();
-          if (stallName) {
-            setTimeout(() => {
-              window.location.href = `stall.html?name=${encodeURIComponent(stallName)}`;
-            }, 2000);
-          } else {
-            setTimeout(() => {
-              window.location.href = 'index.html';
-            }, 2000);
-          }
-
-          this.reset();
-          stallSelect.innerHTML = '<option value="">Select a Stall (select Hawker Centre first)</option>';
-        } catch (error) {
-          alert('❌ Failed to submit. Please try again later.');
-          console.error('Error:', error);
-        }
-      });
+        this.reset();
+        document.getElementById('stall').innerHTML = '<option value="">Select a Stall (select Hawker Centre first)</option>';
+      } catch (error) {
+        alert('❌ Failed to submit. Please try again later.');
+        console.error('Error:', error);
+      }
     });
   </script>
 </body>

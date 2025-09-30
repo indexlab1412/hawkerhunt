@@ -6,275 +6,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Stall Detail - HawkerHunt SG</title>
+  <link rel="stylesheet" href="style.css">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 1.5rem;
-    }
-    .header {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-    .stall-name {
-      font-size: 1.8rem;
-      color: #333;
-      margin: 0 0 0.5rem 0;
-    }
-    .hawker-centre {
-      color: #777;
-      font-size: 1rem;
-      margin: 0 0 1rem 0;
-    }
-    .rating-bar {
-      background: #f0f0f0;
-      border-radius: 9999px;
-      padding: 8px 16px;
-      display: inline-block;
-      margin: 0.5rem 0;
-    }
-    .rating-value {
-      color: #F6AD55;
-      font-weight: bold;
-      font-size: 1.3rem;
-    }
-    .total-reviews {
-      color: #777;
-      font-size: 0.9rem;
-    }
-    .queue-trend {
-      background: #e3f2fd;
-      color: #1976d2;
-      padding: 4px 12px;
-      border-radius: 9999px;
-      font-size: 0.9rem;
-      display: inline-block;
-      margin-top: 0.5rem;
-    }
-    .section {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-    .section-title {
-      font-size: 1.3rem;
-      margin: 0 0 1rem 0;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #f0f0f0;
-    }
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 10px;
-      margin: 1rem 0;
-    }
-    .gallery img {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .menu-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.75rem 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .menu-item:last-child {
-      border-bottom: none;
-    }
-    .menu-name {
-      font-weight: 500;
-    }
-    .menu-price {
-      color: #F6AD55;
-      font-weight: bold;
-    }
-    .review-card {
-      background: white;
-      border-radius: 12px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .review-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
-    .user-rating {
-      color: #F6AD55;
-      font-weight: bold;
-    }
-    .comment {
-      margin: 0.5rem 0;
-      line-height: 1.5;
-    }
-    .review-meta {
-      font-size: 0.85rem;
-      color: #777;
-      display: flex;
-      justify-content: space-between;
-    }
-    .back-home {
-      display: block;
-      text-align: center;
-      margin: 1rem 0;
-      color: #F6AD55;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .loading {
-      text-align: center;
-      padding: 2rem;
-      color: #777;
-    }
-    .no-reviews {
-      text-align: center;
-      padding: 2rem;
-      color: #777;
-      background: white;
-      border-radius: 12px;
-    }
-    .about-text {
-      line-height: 1.6;
-      color: #555;
-    }
-
-    /* Loyalty Stamps */
-    .stamp {
-      width: 50px;
-      height: 50px;
-      border: 2px dashed #ccc;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      color: #aaa;
-      background: white;
-      transition: all 0.3s;
-      cursor: help;
-    }
-    .stamp.filled {
-      border: 2px solid #F6AD55;
-      font-weight: bold;
-    }
-    #redeem-btn {
-      display: none;
-      width: 100%;
-      padding: 14px;
-      background: #48BB78;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      margin-top: 1rem;
-    }
-    #redeem-btn:hover {
-      background: #38A169;
-      transform: scale(1.02);
-    }
-
-    /* Offers */
-    .offer-card {
-      flex: 0 0 auto;
-      scroll-snap-align: start;
-      background: linear-gradient(135deg, #fff3e0, #ffe0b2);
-      border: 2px dashed #F57C00;
-      border-radius: 12px;
-      padding: 1rem;
-      min-width: 280px;
-      box-sizing: border-box;
-    }
-    .offer-title {
-      font-weight: bold;
-      color: #E65100;
-      margin: 0 0 0.5rem 0;
-    }
-    .offer-desc {
-      font-size: 0.95rem;
-      color: #555;
-      margin: 0 0 0.5rem 0;
-    }
-    .offer-expiry {
-      font-size: 0.85rem;
-      color: #D84315;
-      font-weight: bold;
-    }
-
-    /* QR Scanner Overlay */
-    #qr-scanner-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
-      z-index: 1000;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-    #qr-video-container {
-      width: 95%;
-      max-width: 400px;
-      height: 350px;
-      background: #000;
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-    }
-    #qr-video-container video {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover !important;
-    }
-    #qr-instructions-box {
-      background: white;
-      color: #333;
-      padding: 1rem;
-      border-radius: 12px;
-      margin-top: 12px;
-      width: 95%;
-      max-width: 400px;
-      font-size: 0.85rem;
-    }
-    #qr-instructions-box p {
-      margin: 6px 0;
-    }
-    .qr-btn {
-      background: #4299E1;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-weight: 600;
-      margin-top: 10px;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-    .qr-btn.danger {
-      background: #E53E3E;
-    }
-  </style>
 </head>
 <body>
   <div class="container">
@@ -288,46 +21,39 @@
       <div class="queue-trend" id="queue-trend">Loading queue trend...</div>
     </div>
 
-    <!-- About Section -->
-    <div class="section">
+    <div class="card">
       <h2 class="section-title">📌 About This Stall</h2>
       <p class="about-text" id="about-text">Loading stall information...</p>
     </div>
 
-    <!-- Photo Gallery -->
-    <div class="section">
+    <div class="card">
       <h2 class="section-title">📸 Photo Gallery</h2>
       <div class="gallery" id="photo-gallery">
         <p>Loading photos...</p>
       </div>
     </div>
 
-    <!-- Menu Section -->
-    <div class="section">
+    <div class="card">
       <h2 class="section-title">📋 Menu</h2>
       <div id="menu-items">
         <p>Loading menu...</p>
       </div>
     </div>
 
-    <!-- Limited-Time Offers -->
-    <div class="section" id="offers-section" style="display: none;">
+    <div class="card" id="offers-section" style="display: none;">
       <h2 class="section-title">🔥 Limited-Time Offers</h2>
       <div id="offers-slider" style="overflow-x: auto; scroll-snap-type: x mandatory; display: flex; gap: 1rem; padding: 0.5rem 0;">
-        <!-- Offers will be inserted here -->
       </div>
     </div>
 
-    <!-- Reviews Section -->
-    <div class="section">
+    <div class="card">
       <h2 class="section-title">⭐ Reviews</h2>
       <div id="reviews-container" class="loading">
         <p>Loading reviews...</p>
       </div>
     </div>
 
-    <!-- Loyalty Stamp Card -->
-    <div class="section">
+    <div class="card">
       <h2 class="section-title">🎟️ Loyalty Stamps</h2>
       <p>Earn stamps for daily visits! Redeem rewards at milestone stamps.</p>
       
@@ -342,12 +68,10 @@
 
       <div style="text-align: center; margin: 1.5rem 0;">
         <div id="stamp-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; max-width: 300px; margin: 0 auto;">
-          <!-- Stamps will appear here -->
         </div>
       </div>
 
       <div id="stamp-status" style="text-align: center; margin: 1rem 0; min-height: 24px; color: #777;">
-        <!-- Status message -->
       </div>
 
       <button id="redeem-btn">
@@ -369,11 +93,8 @@
     <a href="index.html" class="back-home">← Back to Home</a>
   </div>
 
-  <!-- QR Scanner Overlay -->
   <div id="qr-scanner-overlay">
-    <div id="qr-video-container">
-      <!-- Camera video will appear here -->
-    </div>
+    <div id="qr-video-container"></div>
     <div id="qr-instructions-box">
       <p>📸 Point camera at QR code</p>
       <p style="color: #E53E3E;">No camera? Tap 🔒 in address bar → Allow Camera</p>
@@ -381,9 +102,9 @@
     </div>
   </div>
 
-  <script src="data.js"></script>
   <script>
-    // =============== HELPER FUNCTIONS ===============
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqSBQTvFgGmzIq1WvSu7o7mOXwpFldTmTNnzPhMBOY2dZX8Y2kNQtp4zvzzS5teNJJ2Q/exec';
+
     function getStallNameFromURL() {
       const params = new URLSearchParams(window.location.search);
       return params.get('name');
@@ -391,22 +112,27 @@
 
     function getCurrentDate() {
       const now = new Date();
-      const dateStr = now.toISOString().split('T')[0];
-      return dateStr;
+      return now.toISOString().split('T')[0];
     }
 
     function getStallKey(stallName) {
       return `stamps_${btoa(stallName)}`;
     }
 
-    // =============== LOAD OFFERS FROM DATA.JS ===============
-    function loadOffers(stallName) {
+    async function loadStallDataFromSheet(stallName) {
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=getStalls`);
+        const stalls = await response.json();
+        return stalls.find(s => s.name.toLowerCase() === decodeURIComponent(stallName).toLowerCase());
+      } catch (error) {
+        console.error('Error loading stall data:', error);
+        return null;
+      }
+    }
+
+    function loadOffers(stallData) {
       const offerSection = document.getElementById('offers-section');
       const slider = document.getElementById('offers-slider');
-
-      const stallData = window.stallDatabase.find(s => 
-        s.name.toLowerCase() === stallName.toLowerCase()
-      );
 
       if (stallData && stallData.offers && stallData.offers.length > 0) {
         offerSection.style.display = 'block';
@@ -437,7 +163,6 @@
       }
     }
 
-    // =============== LOYALTY STAMP SYSTEM WITH MILESTONES ===============
     function canAddNewStamp(stampDates) {
       if (stampDates.length === 0) return true;
       const lastStamp = stampDates[stampDates.length - 1];
@@ -451,18 +176,11 @@
       
       let stamps = JSON.parse(localStorage.getItem(key) || '[]');
       
-      // Get milestones
       let loyaltyMilestones = [10];
-      if (window.stallDatabase) {
-        const stallData = window.stallDatabase.find(s => 
-          s.name.toLowerCase() === stallName.toLowerCase()
-        );
-        if (stallData && stallData.loyaltyMilestones) {
-          loyaltyMilestones = stallData.loyaltyMilestones;
-        }
+      if (window.currentStallData && window.currentStallData.loyalty_milestones) {
+        loyaltyMilestones = window.currentStallData.loyalty_milestones;
       }
 
-      // Check if already reached max milestone
       const maxMilestone = Math.max(...loyaltyMilestones);
       if (stamps.length >= maxMilestone) return;
       
@@ -480,15 +198,9 @@
       const status = document.getElementById('stamp-status');
       const redeemBtn = document.getElementById('redeem-btn');
 
-      // Get milestones
       let loyaltyMilestones = [10];
-      if (window.stallDatabase) {
-        const stallData = window.stallDatabase.find(s => 
-          s.name.toLowerCase() === stallName.toLowerCase()
-        );
-        if (stallData && stallData.loyaltyMilestones) {
-          loyaltyMilestones = stallData.loyaltyMilestones;
-        }
+      if (window.currentStallData && window.currentStallData.loyalty_milestones) {
+        loyaltyMilestones = window.currentStallData.loyalty_milestones;
       }
 
       grid.innerHTML = '';
@@ -509,7 +221,6 @@
           });
           stamp.classList.add('filled');
           
-          // Color coding for milestones
           if (loyaltyMilestones.includes(stampNumber)) {
             stamp.style.background = '#fff8e6';
             stamp.style.borderColor = '#F6AD55';
@@ -533,7 +244,6 @@
         grid.appendChild(stamp);
       }
 
-      // Status and redeem button
       const reachedMilestones = loyaltyMilestones.filter(m => m <= stamps.length);
       if (reachedMilestones.length > 0) {
         const maxReached = Math.max(...reachedMilestones);
@@ -551,7 +261,6 @@
       alert('🎉 Show this screen to the stall owner to claim your reward!');
     });
 
-    // =============== QR SCANNER ===============
     let html5QrCode = null;
 
     async function startQRScanner() {
@@ -696,10 +405,6 @@
       }, 3000);
     }
 
-    // =============== GOOGLE APPS SCRIPT INTEGRATION ===============
-    // 👇 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby1na25Wopg0jlqbV1M0JQGGWWiF2NijobmHROEWEXdrUTIdfIGWfdgbB6uqut4CDQftg/exec';
-
     async function loadStallData() {
       const stallName = getStallNameFromURL();
       if (!stallName) {
@@ -708,27 +413,58 @@
       }
 
       try {
-        let stallData = null;
-        if (window.stallDatabase) {
-          stallData = window.stallDatabase.find(s => 
-            s.name.toLowerCase() === decodeURIComponent(stallName).toLowerCase()
-          );
-        }
+        const stallData = await loadStallDataFromSheet(stallName);
+        window.currentStallData = stallData;
 
         document.querySelector('.stall-name').textContent = stallName;
-        if (stallData && stallData.centre) {
-          document.getElementById('hawker-centre').textContent = stallData.centre;
+        if (stallData && stallData.centre_id) {
+          // Load centre name
+          const centresResponse = await fetch(`${SCRIPT_URL}?action=getCentres`);
+          const centres = await centresResponse.json();
+          const centre = centres.find(c => c.centre_id === stallData.centre_id);
+          if (centre) {
+            document.getElementById('hawker-centre').textContent = centre.name;
+          }
         }
 
-        loadOffers(stallName);
+        if (stallData) {
+          loadOffers(stallData);
 
-        const response = await fetch(`${scriptURL}?stall=${encodeURIComponent(stallName)}`, {
-          method: 'GET',
-          mode: 'cors'
-        });
+          document.getElementById('about-text').textContent = stallData.about || "No description available yet.";
+          
+          const galleryDiv = document.getElementById('photo-gallery');
+          if (stallData.photo_urls && stallData.photo_urls.length > 0) {
+            galleryDiv.innerHTML = '';
+            stallData.photo_urls.forEach(photo => {
+              const img = document.createElement('img');
+              img.src = photo;
+              img.alt = stallName;
+              img.loading = "lazy";
+              galleryDiv.appendChild(img);
+            });
+          } else {
+            galleryDiv.innerHTML = '<p>No photos available yet.</p>';
+          }
 
-        if (!response.ok) throw new Error('Network response was not ok');
+          const menuDiv = document.getElementById('menu-items');
+          if (stallData.menu && stallData.menu.length > 0) {
+            menuDiv.innerHTML = '';
+            stallData.menu.forEach(item => {
+              const menuItem = document.createElement('div');
+              menuItem.className = 'menu-item';
+              menuItem.innerHTML = `
+                <span class="menu-name">${item.name}</span>
+                <span class="menu-price">$${item.price.toFixed(2)}</span>
+              `;
+              menuDiv.appendChild(menuItem);
+            });
+          } else {
+            menuDiv.innerHTML = '<p>Menu not available yet.</p>';
+          }
+        }
 
+        // Load reviews
+        const response = await fetch(`${SCRIPT_URL}?stall=${encodeURIComponent(stallName)}`);
         const data = await response.json();
 
         if (!data.stallInfo && stallData) {
@@ -740,43 +476,6 @@
           document.getElementById('avg-rating').textContent = data.stallInfo.avgRating.toFixed(1);
           document.getElementById('total-reviews').textContent = `(${data.stallInfo.totalReviews} reviews)`;
           document.getElementById('queue-trend').textContent = `🕒 Usually ${data.stallInfo.mostCommonQueue}`;
-        }
-
-        const aboutText = document.getElementById('about-text');
-        if (stallData && stallData.about) {
-          aboutText.textContent = stallData.about;
-        } else {
-          aboutText.textContent = "No description available yet. Know something about this stall? Let us know!";
-        }
-
-        const galleryDiv = document.getElementById('photo-gallery');
-        if (stallData && stallData.photos && stallData.photos.length > 0) {
-          galleryDiv.innerHTML = '';
-          stallData.photos.forEach(photo => {
-            const img = document.createElement('img');
-            img.src = photo;
-            img.alt = stallName;
-            img.loading = "lazy";
-            galleryDiv.appendChild(img);
-          });
-        } else {
-          galleryDiv.innerHTML = '<p>No photos available yet.</p>';
-        }
-
-        const menuDiv = document.getElementById('menu-items');
-        if (stallData && stallData.menu && stallData.menu.length > 0) {
-          menuDiv.innerHTML = '';
-          stallData.menu.forEach(item => {
-            const menuItem = document.createElement('div');
-            menuItem.className = 'menu-item';
-            menuItem.innerHTML = `
-              <span class="menu-name">${item.name}</span>
-              <span class="menu-price">$${item.price.toFixed(2)}</span>
-            `;
-            menuDiv.appendChild(menuItem);
-          });
-        } else {
-          menuDiv.innerHTML = '<p>Menu not available yet.</p>';
         }
 
         const reviewsContainer = document.getElementById('reviews-container');
@@ -828,7 +527,6 @@
       }
     }
 
-    // =============== INIT ===============
     document.addEventListener('DOMContentLoaded', function() {
       loadStallData();
 

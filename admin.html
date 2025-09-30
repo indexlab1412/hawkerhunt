@@ -4,94 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HawkerHunt Admin</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 1.5rem;
-    }
-    .header {
-      background: #4299E1;
-      color: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .section-title {
-      font-size: 1.4rem;
-      margin: 0 0 1rem 0;
-      color: #333;
-    }
-    label {
-      display: block;
-      margin: 1rem 0 0.5rem 0;
-      font-weight: 600;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 1rem;
-      margin-bottom: 1rem;
-    }
-    button {
-      background: #4299E1;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      margin-right: 10px;
-    }
-    button.delete {
-      background: #E53E3E;
-    }
-    .stall-item, .centre-item {
-      background: #fafafa;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      border-left: 4px solid #4299E1;
-    }
-    .tabs {
-      display: flex;
-      margin-bottom: 1.5rem;
-    }
-    .tab {
-      padding: 12px 24px;
-      background: #e2e8f0;
-      cursor: pointer;
-      border-radius: 8px 8px 0 0;
-      margin-right: 4px;
-    }
-    .tab.active {
-      background: #4299E1;
-      color: white;
-    }
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
@@ -100,14 +13,12 @@
       <p>Manage centres, stalls, and reviews</p>
     </div>
 
-    <!-- Tabs -->
     <div class="tabs">
       <div class="tab active" data-tab="centres">Hawker Centres</div>
       <div class="tab" data-tab="stalls">Stalls</div>
       <div class="tab" data-tab="reviews">Reviews</div>
     </div>
 
-    <!-- Centres Tab -->
     <div class="tab-content active" id="centres-tab">
       <div class="card">
         <h2 class="section-title">Add New Hawker Centre</h2>
@@ -142,7 +53,6 @@
       </div>
     </div>
 
-    <!-- Stalls Tab -->
     <div class="tab-content" id="stalls-tab">
       <div class="card">
         <h2 class="section-title">Add New Stall</h2>
@@ -156,7 +66,6 @@
           <label for="stall_centre_id">Hawker Centre</label>
           <select id="stall_centre_id" required>
             <option value="">Select a Centre</option>
-            <!-- Will be populated by JS -->
           </select>
 
           <label for="cuisine">Cuisine (comma-separated, e.g. Chinese, Noodles)</label>
@@ -189,7 +98,6 @@
       </div>
     </div>
 
-    <!-- Reviews Tab -->
     <div class="tab-content" id="reviews-tab">
       <div class="card">
         <h2 class="section-title">All Reviews</h2>
@@ -201,10 +109,10 @@
   </div>
 
   <script>
-    // 👇 REPLACE WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-    const ADMIN_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-amvdKCRNdfHL3qMCt3p5goeWHLWDiUiw7BTh8_VRwzVSFn4N9HIuskkR7hqDC5Eycg/exec';
-    const ADMIN_PASSWORD = '@021705d03';
-    // Tab switching
+    // 👇 REPLACE WITH YOUR ADMIN GOOGLE APPS SCRIPT WEB APP URL
+    const ADMIN_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqSBQTvFgGmzIq1WvSu7o7mOXwpFldTmTNnzPhMBOY2dZX8Y2kNQtp4zvzzS5teNJJ2Q/exec';
+    const ADMIN_PASSWORD = '@021705d03'; // ← SET YOUR PASSWORD HERE
+
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -214,7 +122,6 @@
       });
     });
 
-    // Load data on init
     document.addEventListener('DOMContentLoaded', () => {
       loadCentres();
       loadStalls();
@@ -245,7 +152,6 @@
           list.appendChild(div);
         });
 
-        // Populate centre dropdown in stall form
         const select = document.getElementById('stall_centre_id');
         select.innerHTML = '<option value="">Select a Centre</option>';
         centres.forEach(centre => {
@@ -269,13 +175,14 @@
         mrt: document.getElementById('mrt').value,
         address: document.getElementById('address').value,
         about: document.getElementById('about').value,
-        image_url: document.getElementById('image_url').value
+        image_url: document.getElementById('image_url').value,
+        password: ADMIN_PASSWORD
       };
 
       try {
         await fetch(ADMIN_SCRIPT_URL, {
           method: 'POST',
-          body: JSON.stringify(data, password: @021705d03)
+          body: JSON.stringify(data)
         });
         alert('✅ Centre added!');
         document.getElementById('centre-form').reset();
@@ -291,7 +198,11 @@
       try {
         await fetch(ADMIN_SCRIPT_URL, {
           method: 'POST',
-          body: JSON.stringify({ action: 'deleteCentre', centre_id: centreId, password: @021705d03 })
+          body: JSON.stringify({ 
+            action: 'deleteCentre', 
+            centre_id: centreId,
+            password: ADMIN_PASSWORD 
+          })
         });
         loadCentres();
       } catch (error) {
@@ -317,7 +228,7 @@
           div.className = 'stall-item';
           div.innerHTML = `
             <strong>${stall.name}</strong><br>
-            <small>Centre: ${stall.centre_id} | Cuisine: ${stall.cuisine || ''}</small><br>
+            <small>Centre: ${stall.centre_id} | Cuisine: ${stall.cuisine ? stall.cuisine.join(', ') : ''}</small><br>
             <small>ID: ${stall.stall_id}</small>
             <button class="delete" onclick="deleteStall('${stall.stall_id}')">Delete</button>
           `;
@@ -341,13 +252,14 @@
         photo_urls: document.getElementById('photo_urls').value.split(',').map(s => s.trim()).filter(s => s),
         menu_json: document.getElementById('menu_json').value,
         offers_json: document.getElementById('offers_json').value,
-        loyalty_milestones: document.getElementById('loyalty_milestones').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
+        loyalty_milestones: document.getElementById('loyalty_milestones').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)),
+        password: ADMIN_PASSWORD
       };
 
       try {
         await fetch(ADMIN_SCRIPT_URL, {
           method: 'POST',
-          body: JSON.stringify(data, password: @021705d03)
+          body: JSON.stringify(data)
         });
         alert('✅ Stall added!');
         document.getElementById('stall-form').reset();
@@ -363,7 +275,11 @@
       try {
         await fetch(ADMIN_SCRIPT_URL, {
           method: 'POST',
-          body: JSON.stringify({ action: 'deleteStall', stall_id: stallId, password: @021705d03 })
+          body: JSON.stringify({ 
+            action: 'deleteStall', 
+            stall_id: stallId,
+            password: ADMIN_PASSWORD 
+          })
         });
         loadStalls();
       } catch (error) {
@@ -407,7 +323,11 @@
       try {
         await fetch(ADMIN_SCRIPT_URL, {
           method: 'POST',
-          body: JSON.stringify({ action: 'deleteReview', review_id: reviewId, password: @021705d03 })
+          body: JSON.stringify({ 
+            action: 'deleteReview', 
+            review_id: reviewId,
+            password: ADMIN_PASSWORD 
+          })
         });
         loadReviews();
       } catch (error) {
