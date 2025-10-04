@@ -139,7 +139,7 @@
         const card = document.createElement('div');
         card.className = 'card';
         card.onclick = () => {
-          window.location.href = `all-centres.html?centre=${encodeURIComponent(centre.centre_id)}`;
+          window.location.href = `centre.html?name=${encodeURIComponent(centre.name)}`;
         };
 
         card.innerHTML = `
@@ -262,7 +262,7 @@
               card.className = 'card';
               card.style.cursor = 'pointer';
               card.onclick = () => {
-                window.location.href = `all-centres.html?centre=${encodeURIComponent(centre.centre_id)}`;
+                window.location.href = `centre.html?name=${encodeURIComponent(centre.name)}`;
               };
               card.innerHTML = `
                 <div class="card-body">

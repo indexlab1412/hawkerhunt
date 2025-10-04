@@ -48,14 +48,17 @@
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwR731pFqExwMWQY_YXGzdBQBk2eqwnN7oWc0l94YOVen_3icpJByxZWvg87eO7HRuk9A/exec';
 
-    function getCentreNameFromURL() {
+    function getCentreIdentifierFromURL() {
       const params = new URLSearchParams(window.location.search);
-      return params.get('name');
+      return {
+        name: params.get('name'),
+        id: params.get('centre')  // Changed from 'id' to 'centre' to match original all-centres.html
+      };
     }
 
     async function loadCentreData() {
-      const centreName = getCentreNameFromURL();
-      if (!centreName) {
+      const centreId = getCentreIdentifierFromURL();
+      if (!centreId.name && !centreId.id) {
         document.querySelector('.centre-name').textContent = 'Error: No centre specified';
         return;
       }
@@ -65,9 +68,18 @@
         const centresResponse = await fetch(`${SCRIPT_URL}?action=getCentres`);
         const centres = await centresResponse.json();
         
-        const centreData = centres.find(c => 
-          c.name.toLowerCase() === decodeURIComponent(centreName).toLowerCase()
-        );
+        let centreData;
+        if (centreId.id) {
+          // Find by centre_id if provided
+          centreData = centres.find(c => 
+            c.centre_id === decodeURIComponent(centreId.id)
+          );
+        } else {
+          // Find by name if centre_id not provided
+          centreData = centres.find(c => 
+            c.name.toLowerCase() === decodeURIComponent(centreId.name).toLowerCase()
+          );
+        }
 
         if (!centreData) {
           document.querySelector('.centre-name').textContent = centreName;
