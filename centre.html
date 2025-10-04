@@ -94,9 +94,16 @@
         document.querySelector('.centre-name').textContent = centreData.name;
         document.getElementById('mrt-station').textContent = `🚇 ${centreData.mrt}`;
         document.getElementById('about-text').textContent = centreData.about || 'No description available yet.';
-        document.getElementById('address-text').textContent = centreData.address || 'Address not available.';
+        // Format the address display better to avoid redundancy
+        if (centreData.address) {
+          document.getElementById('address-text').textContent = centreData.address.includes(centreData.name) 
+            ? centreData.address 
+            : `${centreData.name} - ${centreData.address}`;
+        } else {
+          document.getElementById('address-text').textContent = centreData.name;
+        }
         
-        // Show map for the centre location
+        // Show map for the centre location (using the address if available, otherwise using the name)
         showCentreMap(centreData.address || centreData.name);
 
         // Load stalls for this centre
@@ -148,7 +155,25 @@
     async function getLocationCoordinates(address) {
       // Since we don't have actual coordinates in the data, we'll use the Google Maps Geocoding API
       const API_KEY = 'AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0'; // Your provided API key
-      const encodedAddress = encodeURIComponent(address);
+      
+      // Clean up the address by removing redundant parts
+      let cleanAddress = address.trim();
+      
+      // Remove duplicate parts from the address to avoid redundancy
+      const parts = cleanAddress.split(' ');
+      const uniqueParts = [];
+      const seen = new Set();
+      
+      for (const part of parts) {
+        if (!seen.has(part.toLowerCase())) {
+          seen.add(part.toLowerCase());
+          uniqueParts.push(part);
+        }
+      }
+      
+      cleanAddress = uniqueParts.join(' ');
+      
+      const encodedAddress = encodeURIComponent(cleanAddress);
       const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${API_KEY}`;
       
       try {
@@ -159,7 +184,15 @@
           const location = data.results[0].geometry.location;
           return { lat: location.lat, lng: location.lng };
         } else {
-          console.error('Geocoding failed for address:', address);
+          console.error('Geocoding failed for address:', cleanAddress);
+          console.warn('Attempting to use simplified address for geocoding...');
+          
+          // Try a simpler address format if the full address fails
+          const simplifiedAddress = cleanAddress.split(',')[0]; // Take only the first part before comma
+          if (simplifiedAddress !== cleanAddress) {
+            return await getLocationCoordinates(simplifiedAddress);
+          }
+          
           return null;
         }
       } catch (error) {
@@ -175,18 +208,31 @@
         return;
       }
       
-      const coords = await getLocationCoordinates(address);
+      // Clean up address to make it more geocodable
+      let displayAddress = address;
+      if (address.includes('Address not available')) {
+        document.getElementById('map-container').style.display = 'none';
+        return;
+      }
+      
+      const coords = await getLocationCoordinates(displayAddress);
       
       if (coords) {
-        const mapUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0&q=${encodeURIComponent(address)}`;
+        const mapUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0&q=${encodeURIComponent(displayAddress)}`;
         const mapFrame = document.getElementById('centre-map');
         mapFrame.src = mapUrl;
         
         // Show the map container
         document.getElementById('map-container').style.display = 'block';
       } else {
-        // Fallback: hide the map container if geocoding fails
-        document.getElementById('map-container').style.display = 'none';
+        // Even if geocoding fails, try to show a map based on the address string directly
+        console.warn('Using fallback map for address:', displayAddress);
+        const mapUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0&q=${encodeURIComponent(displayAddress)}`;
+        const mapFrame = document.getElementById('centre-map');
+        mapFrame.src = mapUrl;
+        
+        // Show the map container (even if geocoding failed, the map might still show something)
+        document.getElementById('map-container').style.display = 'block';
       }
     }
 
