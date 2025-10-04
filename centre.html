@@ -20,8 +20,15 @@
 
     <div class="card">
       <h2 class="section-title">📍 Location</h2>
-      <div style="background: #e9e9e9; height: 200px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #777; margin: 1rem 0;">
-        <p>Map will be integrated soon!</p>
+      <div id="map-container" style="height: 300px; border-radius: 12px; margin: 1rem 0; display: none;">
+        <iframe 
+          id="centre-map" 
+          width="100%" 
+          height="100%" 
+          style="border:0; border-radius: 12px;"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
       </div>
       <p style="text-align: center; margin-top: 0.5rem;">
         <small>📍 Address: <span id="address-text">Loading...</span></small>
@@ -76,6 +83,9 @@
         document.getElementById('mrt-station').textContent = `🚇 ${centreData.mrt}`;
         document.getElementById('about-text').textContent = centreData.about || 'No description available yet.';
         document.getElementById('address-text').textContent = centreData.address || 'Address not available.';
+        
+        // Show map for the centre location
+        showCentreMap(centreData.address || centreData.name);
 
         // Load stalls for this centre
         const stallsResponse = await fetch(`${SCRIPT_URL}?action=getStalls`);
@@ -119,6 +129,52 @@
         console.error('Error loading centre data:', error);
         document.querySelector('.centre-name').textContent = 'Error Loading Centre';
         document.getElementById('stall-list').innerHTML = '<p>❌ Failed to load stalls. Please try again later.</p>';
+      }
+    }
+
+    // Function to get coordinates based on address or location name
+    async function getLocationCoordinates(address) {
+      // Since we don't have actual coordinates in the data, we'll use the Google Maps Geocoding API
+      const API_KEY = 'AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0'; // Your provided API key
+      const encodedAddress = encodeURIComponent(address);
+      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${API_KEY}`;
+      
+      try {
+        const response = await fetch(geocodeUrl);
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+          const location = data.results[0].geometry.location;
+          return { lat: location.lat, lng: location.lng };
+        } else {
+          console.error('Geocoding failed for address:', address);
+          return null;
+        }
+      } catch (error) {
+        console.error('Error during geocoding:', error);
+        return null;
+      }
+    }
+    
+    // Function to display the map for a centre
+    async function showCentreMap(address) {
+      if (!address || address === 'Address not available.') {
+        document.getElementById('map-container').style.display = 'none';
+        return;
+      }
+      
+      const coords = await getLocationCoordinates(address);
+      
+      if (coords) {
+        const mapUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0&q=${encodeURIComponent(address)}`;
+        const mapFrame = document.getElementById('centre-map');
+        mapFrame.src = mapUrl;
+        
+        // Show the map container
+        document.getElementById('map-container').style.display = 'block';
+      } else {
+        // Fallback: hide the map container if geocoding fails
+        document.getElementById('map-container').style.display = 'none';
       }
     }
 

@@ -20,6 +20,22 @@
       </div>
     </form>
 
+    <div id="search-results" style="display: none; margin-top: 2rem;">
+      <h2 class="section-title">🔍 Search Results</h2>
+      <div id="search-results-list"></div>
+    </div>
+
+    <!-- Nearby Offers Section -->
+    <div id="nearby-offers-section" class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 class="section-title">📍 Nearby Offers</h2>
+        <button id="find-nearby-btn" class="outline-btn">Find Nearby</button>
+      </div>
+      <div id="nearby-offers-container">
+        <p>Click "Find Nearby" to discover offers near you!</p>
+      </div>
+    </div>
+
     <h2 class="section-title">🏆 Featured Hawker Centres</h2>
     <div id="featured-centres">
       <p>Loading featured centres...</p>
@@ -28,10 +44,17 @@
     <div style="text-align: center; margin: 1rem 0;">
       <a href="all-centres.html" class="view-all-btn">View All Centres →</a>
     </div>
-
-    <div id="search-results" style="display: none; margin-top: 2rem;">
-      <h2 class="section-title">🔍 Search Results</h2>
-      <div id="search-results-list"></div>
+    
+    <h2 class="section-title">📍 Hawker Centres Map</h2>
+    <div id="featured-map-container" style="height: 400px; border-radius: 16px; margin: 1rem 0;">
+      <iframe 
+        id="featured-map" 
+        width="100%" 
+        height="100%" 
+        style="border:0; border-radius: 16px;"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
     </div>
 
     <h2 class="section-title">⭐ Recent Reviews</h2>
@@ -74,6 +97,30 @@
       }
     }
 
+    // Function to get coordinates based on address or location name
+    async function getLocationCoordinates(address) {
+      // Since we don't have actual coordinates in the data, we'll use the Google Maps Geocoding API
+      const API_KEY = 'AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0'; // Your provided API key
+      const encodedAddress = encodeURIComponent(address);
+      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${API_KEY}`;
+      
+      try {
+        const response = await fetch(geocodeUrl);
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+          const location = data.results[0].geometry.location;
+          return { lat: location.lat, lng: location.lng };
+        } else {
+          console.error('Geocoding failed for address:', address);
+          return null;
+        }
+      } catch (error) {
+        console.error('Error during geocoding:', error);
+        return null;
+      }
+    }
+    
     async function loadFeaturedCentres() {
       const container = document.getElementById('featured-centres');
       const centres = await loadCentres();
@@ -106,6 +153,23 @@
 
         container.appendChild(card);
       });
+      
+      // Show featured centres on the map
+      showFeaturedCentresMap(featured);
+    }
+    
+    // Function to display featured centres on a map
+    async function showFeaturedCentresMap(centres) {
+      if (!centres || centres.length === 0) {
+        return;
+      }
+      
+      // Create a search query for the featured centres
+      let query = centres.map(centre => centre.name).join(' | ');
+      
+      const mapUrl = `https://www.google.com/maps/embed/v1/search?key=AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0&q=${encodeURIComponent(query)}+Singapore`;
+      const mapFrame = document.getElementById('featured-map');
+      mapFrame.src = mapUrl;
     }
 
     async function loadReviews() {
@@ -240,6 +304,236 @@
         searchResults.style.display = 'block';
       });
     }
+
+    // Function to get user's location
+    async function getUserLocation() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject('Geolocation is not supported by this browser.');
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+            reject(error);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+          }
+        );
+      });
+    }
+
+    // Function to calculate distance between two points (lat/lng) using Haversine formula
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Earth's radius in kilometers
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c;
+      return distance; // Distance in kilometers
+    }
+
+    // Function to get approximate coordinates for a location (using a service or predefined data)
+    async function getLocationCoordinates(address) {
+      // Since we don't have actual coordinates in the data, we'll simulate with approximate locations
+      // In a real app, you would use a geocoding service
+      const locationMap = {
+        'chomp chomp': { lat: 1.2902, lng: 103.8520 }, // Near City Hall MRT
+        'maxwell food centre': { lat: 1.2801, lng: 103.8465 }, // Near Outram Park MRT
+        'tanjong pagar': { lat: 1.2785, lng: 103.8449 }, // Tanjong Pagar MRT area
+        'chinatown complex': { lat: 1.2854, lng: 103.8420 }, // Chinatown area
+        'amoy street': { lat: 1.2793, lng: 103.8453 }, // Outram area
+        'tekka centre': { lat: 1.3058, lng: 103.8498 }, // Little India area
+        'old airport road': { lat: 1.3083, lng: 103.8918 }, // Geylang area
+        'pentas @ golden miles': { lat: 1.3039, lng: 103.8354 }, // Newton area
+        'lau pa sat': { lat: 1.2839, lng: 103.8520 } // Downtown area
+      };
+
+      // Try to match the address with known locations
+      for (const [locationName, coords] of Object.entries(locationMap)) {
+        if (address.toLowerCase().includes(locationName)) {
+          return coords;
+        }
+      }
+
+      // If no match found, return a default location (Singapore coordinates)
+      return { lat: 1.3521, lng: 103.8198 };
+    }
+
+    // Function to find nearby stalls with offers
+    async function findNearbyOffers(userLocation) {
+      try {
+        const stalls = await loadStalls();
+
+        // Filter stalls that have offers
+        const stallsWithOffers = stalls.filter(stall => 
+          stall.offers && Array.isArray(stall.offers) && stall.offers.length > 0
+        );
+
+        if (stallsWithOffers.length === 0) {
+          return [];
+        }
+
+        // Get location coordinates for each stall
+        const stallsWithCoordinates = await Promise.all(
+          stallsWithOffers.map(async (stall) => {
+            // Get coordinates based on centre_id or other location data
+            const coords = await getLocationCoordinates(stall.centre_id || stall.name);
+            const distance = calculateDistance(
+              userLocation.latitude, 
+              userLocation.longitude, 
+              coords.lat, 
+              coords.lng
+            );
+            return {
+              ...stall,
+              distance: distance,
+              coordinates: coords
+            };
+          })
+        );
+
+        // Sort by distance
+        return stallsWithCoordinates.sort((a, b) => a.distance - b.distance);
+      } catch (error) {
+        console.error('Error finding nearby offers:', error);
+        return [];
+      }
+    }
+
+    // Function to display nearby offers
+    function displayNearbyOffers(stalls) {
+      const container = document.getElementById('nearby-offers-container');
+      
+      if (stalls.length === 0) {
+        container.innerHTML = '<p>No offers found nearby. Try again later!</p>';
+        return;
+      }
+
+      // Display top 3 closest stalls with offers
+      const closestStalls = stalls.slice(0, 3);
+      
+      container.innerHTML = '<div class="offers-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;"></div>';
+      const grid = container.querySelector('.offers-grid');
+
+      closestStalls.forEach(stall => {
+        const stallCard = document.createElement('div');
+        stallCard.className = 'card';
+        stallCard.style.cursor = 'pointer';
+        stallCard.style.margin = '0.5rem 0';
+        stallCard.onclick = () => {
+          window.location.href = `stall.html?name=${encodeURIComponent(stall.name)}`;
+        };
+
+        // Get the first offer for display
+        const offer = stall.offers[0];
+        const isExpired = new Date(offer.expiry) < new Date();
+        const expiryText = isExpired ? 'EXPIRED' : `Valid until ${offer.expiry}`;
+        
+        stallCard.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">${stall.name}</h3>
+              <p style="color: #777; margin: 0 0 0.25rem 0;">📍 ${stall.centre_id}</p>
+              <p style="font-size: 0.9rem; color: #999; margin: 0;">${stall.cuisine ? stall.cuisine.join(', ') : ''}</p>
+            </div>
+            <div style="text-align: right; font-size: 0.8rem;">
+              <div>${stall.distance.toFixed(2)} km away</div>
+            </div>
+          </div>
+          
+          <div style="margin-top: 1rem; padding: 0.75rem; background: linear-gradient(135deg, #fff3e0, #ffe0b2); border: 1px dashed #F57C00; border-radius: 8px;">
+            <div style="font-weight: bold; color: #E65100; margin: 0 0 0.25rem 0;">${offer.title} ${isExpired ? '❌' : '✅'}</div>
+            <div style="font-size: 0.9rem; color: #555; margin: 0 0 0.25rem 0;">${offer.description}</div>
+            <div style="font-size: 0.8rem; color: #D84315; font-weight: bold;">${expiryText}</div>
+          </div>
+        `;
+
+        if (isExpired) {
+          stallCard.style.opacity = '0.7';
+        }
+
+        grid.appendChild(stallCard);
+      });
+    }
+
+    // Function to handle the "Find Nearby" button click
+    async function handleFindNearby() {
+      const btn = document.getElementById('find-nearby-btn');
+      const originalText = btn.textContent;
+      btn.textContent = 'Locating...';
+      btn.disabled = true;
+
+      try {
+        // Get user's location
+        const userLocation = await getUserLocation();
+        console.log('User location:', userLocation);
+
+        // Find nearby stalls with offers
+        const nearbyStalls = await findNearbyOffers(userLocation);
+        
+        // Display the results
+        displayNearbyOffers(nearbyStalls);
+      } catch (error) {
+        console.error('Error in find nearby:', error);
+        
+        // Provide an alternative way to find nearby offers without location
+        if (error.code === 1) { // Permission denied
+          const container = document.getElementById('nearby-offers-container');
+          container.innerHTML = `
+            <p>Location access denied. Showing random offers instead.</p>
+            <button id="show-random-offers" class="orange-btn">Show Random Offers</button>
+          `;
+          document.getElementById('show-random-offers').addEventListener('click', showRandomOffers);
+        } else {
+          const container = document.getElementById('nearby-offers-container');
+          container.innerHTML = '<p>Unable to find your location. Showing random offers instead.</p>';
+          showRandomOffers();
+        }
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    // Function to show random offers when location is not available
+    async function showRandomOffers() {
+      try {
+        const stalls = await loadStalls();
+        
+        // Filter stalls that have offers
+        const stallsWithOffers = stalls.filter(stall => 
+          stall.offers && Array.isArray(stall.offers) && stall.offers.length > 0
+        );
+
+        // Shuffle and take first 3
+        const shuffled = [...stallsWithOffers].sort(() => 0.5 - Math.random());
+        const randomStalls = shuffled.slice(0, 3);
+        
+        displayNearbyOffers(randomStalls);
+      } catch (error) {
+        console.error('Error showing random offers:', error);
+        const container = document.getElementById('nearby-offers-container');
+        container.innerHTML = '<p>Failed to load offers. Please try again later.</p>';
+      }
+    }
+
+    // Set up event listener for the "Find Nearby" button
+    document.getElementById('find-nearby-btn')?.addEventListener('click', handleFindNearby);
 
     document.addEventListener('DOMContentLoaded', function() {
       loadFeaturedCentres();

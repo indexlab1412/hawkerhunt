@@ -13,8 +13,23 @@
   </div>
 
   <div class="container">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+      <button id="view-toggle" class="outline-btn">Switch to Map View</button>
+    </div>
+    
     <div id="centres-container" class="loading">
       <p>Loading all centres...</p>
+    </div>
+    
+    <div id="centres-map-container" style="display: none; height: 500px; border-radius: 16px; margin-bottom: 1.5rem;">
+      <iframe 
+        id="centres-map" 
+        width="100%" 
+        height="100%" 
+        style="border:0; border-radius: 16px;"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
     </div>
 
     <a href="index.html" class="back-home">← Back to Home</a>
@@ -43,6 +58,57 @@
       }
     }
 
+    // Function to get coordinates based on address or location name
+    async function getLocationCoordinates(address) {
+      // Since we don't have actual coordinates in the data, we'll use the Google Maps Geocoding API
+      const API_KEY = 'AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0'; // Your provided API key
+      const encodedAddress = encodeURIComponent(address);
+      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${API_KEY}`;
+      
+      try {
+        const response = await fetch(geocodeUrl);
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+          const location = data.results[0].geometry.location;
+          return { lat: location.lat, lng: location.lng };
+        } else {
+          console.error('Geocoding failed for address:', address);
+          return null;
+        }
+      } catch (error) {
+        console.error('Error during geocoding:', error);
+        return null;
+      }
+    }
+    
+    // Function to display all centres on a map
+    async function showAllCentresMap(centres) {
+      if (!centres || centres.length === 0) {
+        return;
+      }
+      
+      // For the map view, we'll create a search query for all centres
+      // The Google Maps Embed API allows us to show multiple locations
+      let query = centres.slice(0, 5).map(centre => centre.name).join(' | '); // Limit to first 5 centres
+      
+      const mapUrl = `https://www.google.com/maps/embed/v1/search?key=AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0&q=${encodeURIComponent(query)}+Singapore`;
+      const mapFrame = document.getElementById('centres-map');
+      mapFrame.src = mapUrl;
+      
+      // Show the map container and hide the list
+      document.getElementById('centres-container').style.display = 'none';
+      document.getElementById('centres-map-container').style.display = 'block';
+      document.getElementById('view-toggle').textContent = 'Switch to List View';
+    }
+    
+    // Function to show the list view
+    function showListView() {
+      document.getElementById('centres-container').style.display = 'block';
+      document.getElementById('centres-map-container').style.display = 'none';
+      document.getElementById('view-toggle').textContent = 'Switch to Map View';
+    }
+    
     async function loadAllCentres() {
       const container = document.getElementById('centres-container');
       
@@ -88,6 +154,20 @@
     }
 
     document.addEventListener('DOMContentLoaded', loadAllCentres);
+    
+    // Add event listener for the view toggle button
+    document.getElementById('view-toggle')?.addEventListener('click', async function() {
+      const isMapView = document.getElementById('centres-map-container').style.display === 'block';
+      
+      if (isMapView) {
+        // Switch to list view
+        showListView();
+      } else {
+        // Switch to map view
+        const centres = await loadCentres();
+        showAllCentresMap(centres);
+      }
+    });
   </script>
 </body>
 </html>

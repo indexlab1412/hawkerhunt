@@ -47,6 +47,23 @@
     </div>
 
     <div class="card">
+      <h2 class="section-title">📍 Location</h2>
+      <div id="stall-map-container" style="height: 300px; border-radius: 12px; margin: 1rem 0; display: none;">
+        <iframe 
+          id="stall-map" 
+          width="100%" 
+          height="100%" 
+          style="border:0; border-radius: 12px;"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+      <p style="text-align: center; margin-top: 0.5rem;">
+        <small>📍 <span id="stall-address">Loading location...</span></small>
+      </p>
+    </div>
+
+    <div class="card">
       <h2 class="section-title">⭐ Reviews</h2>
       <div id="reviews-container" class="loading">
         <p>Loading reviews...</p>
@@ -405,6 +422,53 @@
       }, 3000);
     }
 
+    // Function to get coordinates based on address or location name
+    async function getLocationCoordinates(address) {
+      // Since we don't have actual coordinates in the data, we'll use the Google Maps Geocoding API
+      const API_KEY = 'AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0'; // Your provided API key
+      const encodedAddress = encodeURIComponent(address);
+      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${API_KEY}`;
+      
+      try {
+        const response = await fetch(geocodeUrl);
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+          const location = data.results[0].geometry.location;
+          return { lat: location.lat, lng: location.lng };
+        } else {
+          console.error('Geocoding failed for address:', address);
+          return null;
+        }
+      } catch (error) {
+        console.error('Error during geocoding:', error);
+        return null;
+      }
+    }
+    
+    // Function to display the map for a stall
+    async function showStallMap(address, centreName) {
+      if (!address || address === 'Address not available.') {
+        document.getElementById('stall-map-container').style.display = 'none';
+        return;
+      }
+      
+      const fullAddress = `${centreName} ${address}`;
+      const coords = await getLocationCoordinates(fullAddress);
+      
+      if (coords) {
+        const mapUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0&q=${encodeURIComponent(fullAddress)}`;
+        const mapFrame = document.getElementById('stall-map');
+        mapFrame.src = mapUrl;
+        
+        // Show the map container
+        document.getElementById('stall-map-container').style.display = 'block';
+      } else {
+        // Fallback: hide the map container if geocoding fails
+        document.getElementById('stall-map-container').style.display = 'none';
+      }
+    }
+
     async function loadStallData() {
       const stallName = getStallNameFromURL();
       if (!stallName) {
@@ -431,6 +495,24 @@
           loadOffers(stallData);
 
           document.getElementById('about-text').textContent = stallData.about || "No description available yet.";
+          
+          // Load centre information to get address for the map
+          if (stallData.centre_id) {
+            const centresResponse = await fetch(`${SCRIPT_URL}?action=getCentres`);
+            const centres = await centresResponse.json();
+            const centre = centres.find(c => c.centre_id === stallData.centre_id);
+            
+            if (centre) {
+              document.getElementById('stall-address').textContent = `Located at ${centre.name} - ${centre.address || 'Address not available'}`;
+              
+              // Show map for the stall's location (using the centre's address)
+              showStallMap(centre.address || centre.name, centre.name);
+            } else {
+              document.getElementById('stall-address').textContent = 'Location not available';
+            }
+          } else {
+            document.getElementById('stall-address').textContent = 'Location not available';
+          }
           
           const galleryDiv = document.getElementById('photo-gallery');
           if (stallData.photo_urls && stallData.photo_urls.length > 0) {
