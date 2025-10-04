@@ -426,7 +426,25 @@
     async function getLocationCoordinates(address) {
       // Since we don't have actual coordinates in the data, we'll use the Google Maps Geocoding API
       const API_KEY = 'AIzaSyARXvdqnEWTHZYkMYV9eFdEOr3ga0cPxg0'; // Your provided API key
-      const encodedAddress = encodeURIComponent(address);
+      
+      // Clean up the address by removing redundant parts
+      let cleanAddress = address.trim();
+      
+      // Remove duplicate parts from the address to avoid redundancy
+      const parts = cleanAddress.split(' ');
+      const uniqueParts = [];
+      const seen = new Set();
+      
+      for (const part of parts) {
+        if (!seen.has(part.toLowerCase())) {
+          seen.add(part.toLowerCase());
+          uniqueParts.push(part);
+        }
+      }
+      
+      cleanAddress = uniqueParts.join(' ');
+      
+      const encodedAddress = encodeURIComponent(cleanAddress);
       const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${API_KEY}`;
       
       try {
@@ -437,7 +455,15 @@
           const location = data.results[0].geometry.location;
           return { lat: location.lat, lng: location.lng };
         } else {
-          console.error('Geocoding failed for address:', address);
+          console.error('Geocoding failed for address:', cleanAddress);
+          console.warn('Attempting to use simplified address for geocoding...');
+          
+          // Try a simpler address format if the full address fails
+          const simplifiedAddress = cleanAddress.split(',')[0]; // Take only the first part before comma
+          if (simplifiedAddress !== cleanAddress) {
+            return await getLocationCoordinates(simplifiedAddress);
+          }
+          
           return null;
         }
       } catch (error) {
@@ -453,7 +479,8 @@
         return;
       }
       
-      const fullAddress = `${centreName} ${address}`;
+      // Create a more concise and accurate address for geocoding
+      const fullAddress = address.includes(centreName) ? address : `${centreName} ${address}`;
       const coords = await getLocationCoordinates(fullAddress);
       
       if (coords) {
@@ -503,10 +530,17 @@
             const centre = centres.find(c => c.centre_id === stallData.centre_id);
             
             if (centre) {
-              document.getElementById('stall-address').textContent = `Located at ${centre.name} - ${centre.address || 'Address not available'}`;
+              // Format the address display better to avoid redundancy
+              if (centre.address) {
+                document.getElementById('stall-address').textContent = centre.address.includes(centre.name) 
+                  ? `Located at ${centre.address}` 
+                  : `Located at ${centre.name} - ${centre.address}`;
+              } else {
+                document.getElementById('stall-address').textContent = `Located at ${centre.name}`;
+              }
               
               // Show map for the stall's location (using the centre's address)
-              showStallMap(centre.address || centre.name, centre.name);
+              showStallMap(centre.address, centre.name);
             } else {
               document.getElementById('stall-address').textContent = 'Location not available';
             }
