@@ -162,18 +162,127 @@
       }
     });
   <script>
-    // Add star rating hover functionality
-    document.addEventListener('DOMContentLoaded', function() {
+    // Existing functionality from original script
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwR731pFqExwMWQY_YXGzdBQBk2eqwnN7oWc0l94YOVen_3icpJByxZWvg87eO7HRuk9A/exec';
+
+    async function loadCentresAndStalls() {
+      try {
+        const centresResponse = await fetch(`${SCRIPT_URL}?action=getCentres`);
+        const centres = await centresResponse.json();
+        
+        const stallsResponse = await fetch(`${SCRIPT_URL}?action=getStalls`);
+        const stalls = await stallsResponse.json();
+
+        const hawkerSelect = document.getElementById('hawkerCentre');
+        const stallSelect = document.getElementById('stall');
+
+        // Populate centres
+        centres.forEach(centre => {
+          const option = document.createElement('option');
+          option.value = centre.name;
+          option.textContent = centre.name;
+          hawkerSelect.appendChild(option);
+        });
+
+        // Populate stalls when centre changes
+        hawkerSelect.addEventListener('change', function() {
+          stallSelect.innerHTML = '<option value="">Select a Stall</option>';
+          const selectedCentre = this.value;
+          
+          if (selectedCentre) {
+            const centreData = centres.find(c => c.name === selectedCentre);
+            if (centreData) {
+              const centreStalls = stalls.filter(stall => stall.centre_id === centreData.centre_id);
+              centreStalls.forEach(stall => {
+                const option = document.createElement('option');
+                option.value = stall.name;
+                option.textContent = stall.name;
+                stallSelect.appendChild(option);
+              });
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error('Error loading centres/stalls:', error);
+      }
+    }
+
+    document.getElementById('reviewForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const rating = document.querySelector('input[name="Rating"]:checked')?.value;
+      const comment = document.getElementById('comment').value.trim();
+      const queue = document.getElementById('queue').value;
+
+      if (!rating || !comment || !queue) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      const hawkerSelect = document.getElementById('hawkerCentre');
+      const stallSelect = document.getElementById('stall');
+
+      const formData = {
+        "Hawker Centre": hawkerSelect.value,
+        "Stall Name": stallSelect.value,
+        "Rating": rating,
+        "Review Comment": comment,
+        "Queue Time": queue
+      };
+
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+
+        alert('✅ Thank you! Your review has been saved.');
+
+        const stallName = stallSelect.value.trim();
+        if (stallName) {
+          setTimeout(() => {
+            window.location.href = `stall.html?name=${encodeURIComponent(stallName)}`;
+          }, 2000);
+        } else {
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 2000);
+        }
+
+        this.reset();
+        document.getElementById('stall').innerHTML = '<option value="">Select a Stall (select Hawker Centre first)</option>';
+      } catch (error) {
+        alert('❌ Failed to submit. Please try again later.');
+        console.error('Error:', error);
+      }
+    });
+
+    // Star rating hover and selection functionality
+    function initStarRatings() {
       const stars = document.querySelectorAll('.rating .star');
       
-      // Add hover effect
+      // Add click effect (for selection)
       stars.forEach(star => {
+        const input = star.previousElementSibling;
+        
+        // Click to select rating
+        star.addEventListener('click', function() {
+          input.checked = true;
+          highlightStars(input.value);
+        });
+        
+        // Add hover effect
         star.addEventListener('mouseover', function() {
-          const value = this.previousElementSibling.value;
+          const value = input.value;
           highlightStars(value);
         });
         
-        // Reset on mouseout
+        // Reset on mouseout (only if not selected)
         star.parentElement.addEventListener('mouseleave', function() {
           const selected = document.querySelector('input[name="Rating"]:checked');
           if (selected) {
@@ -181,11 +290,6 @@
           } else {
             resetStars();
           }
-        });
-        
-        // Highlight when clicked
-        this.previousElementSibling.addEventListener('change', function() {
-          highlightStars(this.value);
         });
       });
       
@@ -204,8 +308,8 @@
           star.style.color = '#ddd';
         });
       }
-    });
-    
+    }
+
     // Register service worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
@@ -283,6 +387,12 @@
       if (installBtn) {
         installBtn.style.display = 'none';
       }
+    });
+
+    // Initialize all functionality when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      loadCentresAndStalls();
+      initStarRatings();
     });
   </script>
 </body>
