@@ -695,57 +695,61 @@
     let deferredPrompt;
     
     window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('beforeinstallprompt event fired');
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
       // Stash the event so it can be triggered later
       deferredPrompt = e;
-      // Show install button (if you want)
+      // Show install button
       showInstallButton();
     });
     
     function showInstallButton() {
       // Check if button already exists
       let installBtn = document.getElementById('install-button');
-      if (installBtn) {
+      if (!installBtn) {
+        // Create install button
+        installBtn = document.createElement('button');
+        installBtn.id = 'install-button';
+        installBtn.textContent = 'Install App';
+        installBtn.style.cssText = `
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: var(--accent);
+          color: var(--text-primary);
+          border: none;
+          padding: 12px 24px;
+          border-radius: 30px;
+          font-weight: 600;
+          cursor: pointer;
+          z-index: 10000;
+          display: block;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          min-width: 120px;
+        `;
+        installBtn.onclick = installApp;
+        document.body.appendChild(installBtn);
+      } else {
         installBtn.style.display = 'block';
-        return;
       }
-      
-      // Create install button
-      installBtn = document.createElement('button');
-      installBtn.id = 'install-button';
-      installBtn.textContent = 'Install App';
-      installBtn.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--accent);
-        color: var(--text-primary);
-        border: none;
-        padding: 12px 24px;
-        border-radius: 30px;
-        font-weight: 600;
-        cursor: pointer;
-        z-index: 10000;
-        display: block;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      `;
-      installBtn.onclick = installApp;
-      document.body.appendChild(installBtn);
     }
     
     async function installApp() {
       if (!deferredPrompt) {
+        console.log('No deferredPrompt available');
         return;
       }
       
+      console.log('Showing install prompt...');
       // Show the install prompt
       deferredPrompt.prompt();
       
       // Wait for the user to respond to the prompt
       const { outcome } = await deferredPrompt.userChoice;
       
+      console.log(`User response to install prompt: ${outcome}`);
       if (outcome === 'accepted') {
         console.log('User accepted the install prompt');
       } else {
@@ -770,6 +774,15 @@
         installBtn.style.display = 'none';
       }
     });
+    
+    // Check for installability after some time in case the event doesn't fire
+    setTimeout(() => {
+      if (!deferredPrompt) {
+        console.log('No beforeinstallprompt event fired, checking for installability');
+        // Some browsers might not fire the beforeinstallprompt event
+        // In this case, we could implement alternative installation methods
+      }
+    }, 5000);
   </script>
 </body>
 </html>
