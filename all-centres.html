@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="description" content="Browse all hawker centres in Singapore. Discover authentic local food experiences.">
+  <meta name="theme-color" content="#2A6EF0">
   <title>All Centres - HawkerHunt SG</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192x192.png">
 </head>
 <body>
   <div class="hero">
@@ -13,15 +17,15 @@
   </div>
 
   <div class="container">
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-      <button id="view-toggle" class="outline-btn">Switch to Map View</button>
+    <div style="display: flex; justify-content: center; margin-bottom: 1rem;">
+      <button id="view-toggle" class="outline-btn" style="width: 100%;">Switch to Map View</button>
     </div>
     
     <div id="centres-container" class="loading">
       <p>Loading all centres...</p>
     </div>
     
-    <div id="centres-map-container" style="display: none; height: 500px; border-radius: 16px; margin-bottom: 1.5rem;">
+    <div id="centres-map-container" style="display: none; height: 300px; border-radius: 16px; margin-bottom: 1.5rem;">
       <iframe 
         id="centres-map" 
         width="100%" 
@@ -168,6 +172,21 @@
         showAllCentresMap(centres);
       }
     });
+  </script>
+  
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('ServiceWorker registration failed: ', error);
+          });
+      });
+    }
   </script>
 </body>
 </html>

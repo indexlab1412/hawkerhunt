@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="description" content="Submit your review for hawker stalls in Singapore. Help others find the best food experiences.">
+  <meta name="theme-color" content="#2A6EF0">
   <title>Submit Review - HawkerHunt SG</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192x192.png">
 </head>
 <body>
   <div class="container">
@@ -24,21 +28,21 @@
         </select>
 
         <label>Rating</label>
-        <div class="rating">
-          <input type="radio" id="star5" name="Rating" value="5" required />
-          <label for="star5">★</label>
-          <input type="radio" id="star4" name="Rating" value="4" />
-          <label for="star4">★</label>
-          <input type="radio" id="star3" name="Rating" value="3" />
-          <label for="star3">★</label>
-          <input type="radio" id="star2" name="Rating" value="2" />
-          <label for="star2">★</label>
-          <input type="radio" id="star1" name="Rating" value="1" />
-          <label for="star1">★</label>
+        <div class="rating" style="display: flex; justify-content: center; direction: rtl;">
+          <input type="radio" id="star5" name="Rating" value="5" required style="display: none;"/>
+          <label for="star5" style="font-size: 2rem; cursor: pointer; color: #ddd;">★</label>
+          <input type="radio" id="star4" name="Rating" value="4" style="display: none;"/>
+          <label for="star4" style="font-size: 2rem; cursor: pointer; color: #ddd;">★</label>
+          <input type="radio" id="star3" name="Rating" value="3" style="display: none;"/>
+          <label for="star3" style="font-size: 2rem; cursor: pointer; color: #ddd;">★</label>
+          <input type="radio" id="star2" name="Rating" value="2" style="display: none;"/>
+          <label for="star2" style="font-size: 2rem; cursor: pointer; color: #ddd;">★</label>
+          <input type="radio" id="star1" name="Rating" value="1" style="display: none;"/>
+          <label for="star1" style="font-size: 2rem; cursor: pointer; color: #ddd;">★</label>
         </div>
 
         <label for="comment">Review Comment</label>
-        <textarea id="comment" name="Review Comment" rows="4" placeholder="What did you order? How was the taste, service, price?" required></textarea>
+        <textarea id="comment" name="Review Comment" rows="4" placeholder="What did you order? How was the taste, service, price?" required style="width: 100%; box-sizing: border-box;"></textarea>
 
         <label for="queue">Queue Time When You Visited</label>
         <select id="queue" name="Queue Time" required>
@@ -49,7 +53,7 @@
           <option value="Long">Long (15+ mins)</option>
         </select>
 
-        <button type="submit">Submit Review</button>
+        <button type="submit" style="width: 100%;">Submit Review</button>
       </form>
 
       <a href="index.html" class="back-home">← Back to Home</a>
@@ -157,6 +161,21 @@
         console.error('Error:', error);
       }
     });
+  </script>
+  
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('ServiceWorker registration failed: ', error);
+          });
+      });
+    }
   </script>
 </body>
 </html>

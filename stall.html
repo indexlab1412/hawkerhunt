@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="description" content="Detailed information about hawker stalls in Singapore. View menu, reviews, and location details.">
+  <meta name="theme-color" content="#2A6EF0">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Stall Detail - HawkerHunt SG</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192x192.png">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
@@ -42,13 +46,13 @@
 
     <div class="card" id="offers-section" style="display: none;">
       <h2 class="section-title">🔥 Limited-Time Offers</h2>
-      <div id="offers-slider" style="overflow-x: auto; scroll-snap-type: x mandatory; display: flex; gap: 1rem; padding: 0.5rem 0;">
+      <div id="offers-slider" style="overflow-x: auto; scroll-snap-type: x mandatory; display: flex; gap: 1rem; padding: 0.5rem 0; -webkit-overflow-scrolling: touch;">
       </div>
     </div>
 
     <div class="card">
       <h2 class="section-title">📍 Location</h2>
-      <div id="stall-map-container" style="height: 300px; border-radius: 12px; margin: 1rem 0; display: none;">
+      <div id="stall-map-container" style="height: 250px; border-radius: 12px; margin: 1rem 0; display: none;">
         <iframe 
           id="stall-map" 
           width="100%" 
@@ -84,7 +88,7 @@
       </div>
 
       <div style="text-align: center; margin: 1.5rem 0;">
-        <div id="stamp-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; max-width: 300px; margin: 0 auto;">
+        <div id="stamp-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; max-width: 280px; margin: 0 auto;">
         </div>
       </div>
 
@@ -669,6 +673,21 @@
         }
       }
     });
+  </script>
+  
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('ServiceWorker registration failed: ', error);
+          });
+      });
+    }
   </script>
 </body>
 </html>

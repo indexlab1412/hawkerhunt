@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="description" content="Admin dashboard for managing HawkerHunt SG content">
+  <meta name="theme-color" content="#2A6EF0">
   <title>HawkerHunt Admin</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192x192.png">
 </head>
 <body>
   <div class="container">
@@ -41,7 +45,7 @@
           <label for="image_url">Image URL</label>
           <input type="text" id="image_url">
 
-          <button type="submit">Add Centre</button>
+          <button type="submit" style="width: 100%;">Add Centre</button>
         </form>
       </div>
 
@@ -86,7 +90,7 @@
           <label for="loyalty_milestones">Loyalty Milestones (comma-separated, e.g. 2,5,10)</label>
           <input type="text" id="loyalty_milestones" value="10">
 
-          <button type="submit">Add Stall</button>
+          <button type="submit" style="width: 100%;">Add Stall</button>
         </form>
       </div>
 
@@ -333,6 +337,21 @@
       } catch (error) {
         alert('❌ Failed to delete review.');
       }
+    }
+  </script>
+  
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('ServiceWorker registration failed: ', error);
+          });
+      });
     }
   </script>
 </body>

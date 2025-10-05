@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="description" content="Discover the best hawker stalls in Singapore. Skip the guesswork and enjoy authentic local food experiences.">
+  <meta name="theme-color" content="#2A6EF0">
   <title>HawkerHunt SG</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192x192.png">
 </head>
 <body>
   <div class="hero">
@@ -15,21 +19,21 @@
   <div class="container">
     <form id="searchForm">
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search stalls or centres (e.g. 'Chicken Rice', 'Maxwell')" />
+        <input type="text" id="searchInput" placeholder="Search stalls or centres (e.g. 'Chicken Rice', 'Maxwell')" autocomplete="off" />
         <button type="submit" class="orange-btn">Search</button>
       </div>
     </form>
 
-    <div id="search-results" style="display: none; margin-top: 2rem;">
+    <div id="search-results" style="display: none; margin-top: 1rem;">
       <h2 class="section-title">🔍 Search Results</h2>
       <div id="search-results-list"></div>
     </div>
 
     <!-- Nearby Offers Section -->
     <div id="nearby-offers-section" class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
         <h2 class="section-title">📍 Nearby Offers</h2>
-        <button id="find-nearby-btn" class="outline-btn">Find Nearby</button>
+        <button id="find-nearby-btn" class="outline-btn" style="margin-left: auto;">Find Nearby</button>
       </div>
       <div id="nearby-offers-container">
         <p>Click "Find Nearby" to discover offers near you!</p>
@@ -46,7 +50,7 @@
     </div>
     
     <h2 class="section-title">📍 Hawker Centres Map</h2>
-    <div id="featured-map-container" style="height: 400px; border-radius: 16px; margin: 1rem 0;">
+    <div id="featured-map-container" style="height: 300px; border-radius: 16px; margin: 1rem 0;">
       <iframe 
         id="featured-map" 
         width="100%" 
@@ -427,7 +431,8 @@
       // Display top 3 closest stalls with offers
       const closestStalls = stalls.slice(0, 3);
       
-      container.innerHTML = '<div class="offers-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;"></div>';
+      // For mobile, use a simpler layout
+      container.innerHTML = '<div class="offers-grid" style="display: flex; flex-direction: column; gap: 1rem;"></div>';
       const grid = container.querySelector('.offers-grid');
 
       closestStalls.forEach(stall => {
@@ -445,21 +450,23 @@
         const expiryText = isExpired ? 'EXPIRED' : `Valid until ${offer.expiry}`;
         
         stallCard.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-              <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">${stall.name}</h3>
-              <p style="color: #777; margin: 0 0 0.25rem 0;">📍 ${stall.centre_id}</p>
-              <p style="font-size: 0.9rem; color: #999; margin: 0;">${stall.cuisine ? stall.cuisine.join(', ') : ''}</p>
+          <div style="display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">${stall.name}</h3>
+                <p style="color: #777; margin: 0 0 0.25rem 0;">📍 ${stall.centre_id}</p>
+                <p style="font-size: 0.9rem; color: #999; margin: 0;">${stall.cuisine ? stall.cuisine.join(', ') : ''}</p>
+              </div>
             </div>
-            <div style="text-align: right; font-size: 0.8rem;">
+            <div style="text-align: right; font-size: 0.9rem; margin: 0.5rem 0; color: #666;">
               <div>${stall.distance.toFixed(2)} km away</div>
             </div>
-          </div>
-          
-          <div style="margin-top: 1rem; padding: 0.75rem; background: linear-gradient(135deg, #fff3e0, #ffe0b2); border: 1px dashed #F57C00; border-radius: 8px;">
-            <div style="font-weight: bold; color: #E65100; margin: 0 0 0.25rem 0;">${offer.title} ${isExpired ? '❌' : '✅'}</div>
-            <div style="font-size: 0.9rem; color: #555; margin: 0 0 0.25rem 0;">${offer.description}</div>
-            <div style="font-size: 0.8rem; color: #D84315; font-weight: bold;">${expiryText}</div>
+            
+            <div style="margin-top: 0.5rem; padding: 0.75rem; background: linear-gradient(135deg, #fff3e0, #ffe0b2); border: 1px dashed #F57C00; border-radius: 8px;">
+              <div style="font-weight: bold; color: #E65100; margin: 0 0 0.25rem 0;">${offer.title} ${isExpired ? '❌' : '✅'}</div>
+              <div style="font-size: 0.9rem; color: #555; margin: 0 0 0.25rem 0;">${offer.description}</div>
+              <div style="font-size: 0.8rem; color: #D84315; font-weight: bold;">${expiryText}</div>
+            </div>
           </div>
         `;
 
@@ -540,6 +547,21 @@
       loadReviews();
       loadSearchData();
     });
+  </script>
+  
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('ServiceWorker registration failed: ', error);
+          });
+      });
+    }
   </script>
 </body>
 </html>
