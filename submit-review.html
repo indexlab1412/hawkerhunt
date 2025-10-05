@@ -8,9 +8,9 @@
   <title>Submit Review - HawkerHunt SG</title>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192x192.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512x512.png">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
 </head>
 <body>
   <div class="container">
@@ -164,9 +164,7 @@
       }
     });
     
-    // Existing functionality from original script
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwR731pFqExwMWQY_YXGzdBQBk2eqwnN7oWc0l94YOVen_3icpJByxZWvg87eO7HRuk9A/exec';
-
+    // Only define loadCentresAndStalls and star rating functionality - other functions are already defined in original script
     async function loadCentresAndStalls() {
       try {
         const centresResponse = await fetch(`${SCRIPT_URL}?action=getCentres`);
@@ -209,60 +207,6 @@
         console.error('Error loading centres/stalls:', error);
       }
     }
-
-    document.getElementById('reviewForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-
-      const rating = document.querySelector('input[name="Rating"]:checked')?.value;
-      const comment = document.getElementById('comment').value.trim();
-      const queue = document.getElementById('queue').value;
-
-      if (!rating || !comment || !queue) {
-        alert('Please fill in all required fields.');
-        return;
-      }
-
-      const hawkerSelect = document.getElementById('hawkerCentre');
-      const stallSelect = document.getElementById('stall');
-
-      const formData = {
-        "Hawker Centre": hawkerSelect.value,
-        "Stall Name": stallSelect.value,
-        "Rating": rating,
-        "Review Comment": comment,
-        "Queue Time": queue
-      };
-
-      try {
-        const response = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData)
-        });
-
-        alert('✅ Thank you! Your review has been saved.');
-
-        const stallName = stallSelect.value.trim();
-        if (stallName) {
-          setTimeout(() => {
-            window.location.href = `stall.html?name=${encodeURIComponent(stallName)}`;
-          }, 2000);
-        } else {
-          setTimeout(() => {
-            window.location.href = 'index.html';
-          }, 2000);
-        }
-
-        this.reset();
-        document.getElementById('stall').innerHTML = '<option value="">Select a Stall (select Hawker Centre first)</option>';
-      } catch (error) {
-        alert('❌ Failed to submit. Please try again later.');
-        console.error('Error:', error);
-      }
-    });
 
     // Star rating hover and selection functionality
     function initStarRatings() {
