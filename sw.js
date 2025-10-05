@@ -25,6 +25,13 @@ self.addEventListener('install', event => {
       .then(cache => {
         return cache.addAll(urlsToCache);
       })
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    self.clients.claim()
   );
 });
 
@@ -34,8 +41,11 @@ self.addEventListener('fetch', event => {
       .then(response => {
         // Return the cached response or fetch from network
         return response || fetch(event.request);
-      }
-    )
+      })
+      .catch(() => {
+        // If both fail, return offline fallback
+        return caches.match('/index.html');
+      })
   );
 });
 

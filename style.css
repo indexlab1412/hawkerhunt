@@ -509,6 +509,14 @@ input, textarea, select {
   width: 100%;
   text-align: center;
   margin: 1rem 0;
+  max-width: 300px; /* Limit width on larger screens */
+}
+
+@media (max-width: 575.98px) {
+  .view-all-btn {
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 @media (min-width: 576px) {
@@ -533,6 +541,14 @@ input, textarea, select {
   text-decoration: none;
   font-weight: 600;
   margin: 1.5rem 0;
+  max-width: 300px; /* Limit width on larger screens */
+}
+
+@media (max-width: 575.98px) {
+  .submit-review-btn {
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 .submit-review-btn:hover {

@@ -28,17 +28,17 @@
         </select>
 
         <label>Rating</label>
-        <div class="rating" style="display: flex; justify-content: center; direction: rtl;">
+        <div class="rating" style="display: flex; justify-content: center; direction: rtl; position: relative;">
           <input type="radio" id="star5" name="Rating" value="5" required style="display: none;"/>
-          <label for="star5" style="font-size: 2rem; cursor: pointer; color: #ddd;">★</label>
+          <label for="star5" class="star" style="font-size: 2rem; cursor: pointer; color: #ddd; transition: color 0.2s;">★</label>
           <input type="radio" id="star4" name="Rating" value="4" style="display: none;"/>
-          <label for="star4" style="font-size: 2rem; cursor: pointer; color: #ddd;">★</label>
+          <label for="star4" class="star" style="font-size: 2rem; cursor: pointer; color: #ddd; transition: color 0.2s;">★</label>
           <input type="radio" id="star3" name="Rating" value="3" style="display: none;"/>
-          <label for="star3" style="font-size: 2rem; cursor: pointer; color: #ddd;">★</label>
+          <label for="star3" class="star" style="font-size: 2rem; cursor: pointer; color: #ddd; transition: color 0.2s;">★</label>
           <input type="radio" id="star2" name="Rating" value="2" style="display: none;"/>
-          <label for="star2" style="font-size: 2rem; cursor: pointer; color: #ddd;">★</label>
+          <label for="star2" class="star" style="font-size: 2rem; cursor: pointer; color: #ddd; transition: color 0.2s;">★</label>
           <input type="radio" id="star1" name="Rating" value="1" style="display: none;"/>
-          <label for="star1" style="font-size: 2rem; cursor: pointer; color: #ddd;">★</label>
+          <label for="star1" class="star" style="font-size: 2rem; cursor: pointer; color: #ddd; transition: color 0.2s;">★</label>
         </div>
 
         <label for="comment">Review Comment</label>
@@ -161,9 +161,51 @@
         console.error('Error:', error);
       }
     });
-  </script>
-  
   <script>
+    // Add star rating hover functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const stars = document.querySelectorAll('.rating .star');
+      
+      // Add hover effect
+      stars.forEach(star => {
+        star.addEventListener('mouseover', function() {
+          const value = this.previousElementSibling.value;
+          highlightStars(value);
+        });
+        
+        // Reset on mouseout
+        star.parentElement.addEventListener('mouseleave', function() {
+          const selected = document.querySelector('input[name="Rating"]:checked');
+          if (selected) {
+            highlightStars(selected.value);
+          } else {
+            resetStars();
+          }
+        });
+        
+        // Highlight when clicked
+        this.previousElementSibling.addEventListener('change', function() {
+          highlightStars(this.value);
+        });
+      });
+      
+      function highlightStars(value) {
+        stars.forEach((star, index) => {
+          if (index < value) {
+            star.style.color = '#F4C542'; // Use accent color
+          } else {
+            star.style.color = '#ddd';
+          }
+        });
+      }
+      
+      function resetStars() {
+        stars.forEach(star => {
+          star.style.color = '#ddd';
+        });
+      }
+    });
+    
     // Register service worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
@@ -176,6 +218,72 @@
           });
       });
     }
+    
+    // Handle PWA install prompt
+    let deferredPrompt;
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      deferredPrompt = e;
+      // Show install button (if you want)
+      showInstallButton();
+    });
+    
+    function showInstallButton() {
+      // Create install button if needed
+      const installBtn = document.createElement('button');
+      installBtn.id = 'install-button';
+      installBtn.textContent = 'Install App';
+      installBtn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent);
+        color: var(--text-primary);
+        border: none;
+        padding: 12px 24px;
+        border-radius: 30px;
+        font-weight: 600;
+        cursor: pointer;
+        z-index: 1000;
+        display: none;
+      `;
+      installBtn.onclick = installApp;
+      document.body.appendChild(installBtn);
+    }
+    
+    async function installApp() {
+      if (!deferredPrompt) {
+        return;
+      }
+      
+      // Show the install prompt
+      deferredPrompt.prompt();
+      
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      
+      // Clear the deferredPrompt variable
+      deferredPrompt = null;
+    }
+    
+    // Show install button if app is not already installed
+    window.addEventListener('appinstalled', () => {
+      console.log('PWA was installed');
+      const installBtn = document.getElementById('install-button');
+      if (installBtn) {
+        installBtn.style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>
