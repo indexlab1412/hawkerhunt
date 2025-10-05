@@ -241,7 +241,10 @@
       
       function highlightStars(value) {
         stars.forEach((star, index) => {
-          if (index < value) {
+          // For RTL layout, we need to highlight from the end (right side)
+          // The stars array is in DOM order (rightmost is index 0 in RTL visual)
+          // So to highlight 'value' stars, we highlight the last 'value' stars in the array
+          if (index >= (5 - value)) {
             star.style.color = '#F4C542'; // Use accent color
           } else {
             star.style.color = '#ddd';
@@ -259,7 +262,7 @@
     // Register service worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('./sw.js')
           .then(function(registration) {
             console.log('ServiceWorker registration successful with scope: ', registration.scope);
           })
@@ -282,8 +285,15 @@
     });
     
     function showInstallButton() {
-      // Create install button if needed
-      const installBtn = document.createElement('button');
+      // Check if button already exists
+      let installBtn = document.getElementById('install-button');
+      if (installBtn) {
+        installBtn.style.display = 'block';
+        return;
+      }
+      
+      // Create install button
+      installBtn = document.createElement('button');
       installBtn.id = 'install-button';
       installBtn.textContent = 'Install App';
       installBtn.style.cssText = `
@@ -298,8 +308,9 @@
         border-radius: 30px;
         font-weight: 600;
         cursor: pointer;
-        z-index: 1000;
-        display: none;
+        z-index: 10000;
+        display: block;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       `;
       installBtn.onclick = installApp;
       document.body.appendChild(installBtn);
@@ -324,6 +335,12 @@
       
       // Clear the deferredPrompt variable
       deferredPrompt = null;
+      
+      // Hide the install button after prompting
+      const installBtn = document.getElementById('install-button');
+      if (installBtn) {
+        installBtn.style.display = 'none';
+      }
     }
     
     // Show install button if app is not already installed
